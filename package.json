@@ -1,0 +1,15 @@
+{
+  "name": "toolsview",
+  "version": "1.0.0",
+  "description": "Analyze Claude skill relationships and emit a graph JSON",
+  "type": "module",
+  "bin": {
+    "toolsview": "./src/index.js"
+  },
+  "files": [
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
