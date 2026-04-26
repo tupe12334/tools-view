@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-04-26
+
+### Added
+- Auto-scale spacing factor and physics tick budget based on node count and edge density; spacing slider's max and initial value adapt to the graph so dense graphs (e.g. gstack: 46 nodes / 1294 edges) lay out without manual adjustment
+
 ## [1.5.1] - 2026-04-26
 
 ### Fixed

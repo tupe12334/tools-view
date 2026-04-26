@@ -9,6 +9,7 @@ import { initPositions } from './init-positions.js';
 import { tick } from './tick.js';
 import { screenToWorld } from './screen-to-world.js';
 import { hitNode } from './hit-node.js';
+import { autoSpacing } from './auto-spacing.js';
 
 declare global {
   interface Window {
@@ -70,12 +71,16 @@ const pan = { x: 0, y: 0 };
 let scale = 1;
 let drag: SimNode | null = null;
 let panDrag: { sx: number; sy: number } | null = null;
-let spacingFactor = 1;
+let spacingFactor = autoSpacing(G.nodes.length, G.edges.length);
 let clickNode: SimNode | null = null;
 let clickPos: { x: number; y: number } | null = null;
 let ticks = 0;
 
-(document.getElementById('spacing') as HTMLInputElement).addEventListener('input', (e) => {
+const spacingEl = document.getElementById('spacing') as HTMLInputElement;
+const sliderMax = Math.max(10, Math.ceil(spacingFactor * 5) * 2);
+spacingEl.max = String(sliderMax);
+spacingEl.value = String(Math.round(spacingFactor * 5));
+spacingEl.addEventListener('input', (e) => {
   spacingFactor = Number((e.target as HTMLInputElement).value) / 5;
   ticks = 0;
 });
@@ -192,8 +197,9 @@ function draw(): void {
   ctx.restore();
 }
 
+const tickBudget = 300 + G.nodes.length * 10;
 function loop(): void {
-  if (ticks < 300) {
+  if (ticks < tickBudget) {
     tick({ nodes, nodeById, edges, drag, spacingFactor, W, H });
     ticks++;
   }
