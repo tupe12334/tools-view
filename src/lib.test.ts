@@ -88,7 +88,8 @@ describe('classifyRef', () => {
 
   describe('calls', () => {
     it('"full logic in"', () => expect(classifyRef('full logic in this skill')).toBe('calls'));
-    it('"apply those instructions"', () => expect(classifyRef('apply those instructions')).toBe('calls'));
+    it('"apply those instructions"', () =>
+      expect(classifyRef('apply those instructions')).toBe('calls'));
     it('"calls"', () => expect(classifyRef('this skill calls')).toBe('calls'));
     it('"using"', () => expect(classifyRef('using this')).toBe('calls'));
     it('"invokes"', () => expect(classifyRef('it invokes the handler')).toBe('calls'));
@@ -185,7 +186,12 @@ describe('extractEdges', () => {
 
 describe('buildHtml', () => {
   it('replaces __GRAPH_DATA__ with JSON', () => {
-    const graph = { generated: '2024-01-01T00:00:00.000Z', skillsDir: 'skills', nodes: [], edges: [] };
+    const graph = {
+      generated: '2024-01-01T00:00:00.000Z',
+      skillsDir: 'skills',
+      nodes: [],
+      edges: [],
+    };
     const html = buildHtml(graph);
     expect(html).toContain(JSON.stringify(graph));
     expect(html).not.toContain('__GRAPH_DATA__');
@@ -274,7 +280,9 @@ describe('openBrowser', () => {
   });
 
   it('silently ignores execSync errors', () => {
-    mockedExecSync.mockImplementationOnce(() => { throw new Error('no browser'); });
+    mockedExecSync.mockImplementationOnce(() => {
+      throw new Error('no browser');
+    });
     expect(() => openBrowser('/tmp/graph.html')).not.toThrow();
   });
 });
@@ -360,7 +368,11 @@ describe('main', () => {
 
   it('uses name/description/allowed-tools from frontmatter', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
-    makeSkill(skillsDir, 'my-skill', '---\nname: My Skill\ndescription: Does stuff\nallowed-tools: Bash, Read\n---\nbody');
+    makeSkill(
+      skillsDir,
+      'my-skill',
+      '---\nname: My Skill\ndescription: Does stuff\nallowed-tools: Bash, Read\n---\nbody',
+    );
 
     main();
 

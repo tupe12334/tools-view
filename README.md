@@ -1,5 +1,8 @@
 # toolsview
 
+[![CI](https://github.com/tupe12334/tools-view/actions/workflows/ci.yml/badge.svg)](https://github.com/tupe12334/tools-view/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/toolsview)](https://www.npmjs.com/package/toolsview)
+
 Visualize your Claude Code skill graph. Run it in any repo that has `.claude/skills/` and get an interactive dependency map in your browser.
 
 ## What it does

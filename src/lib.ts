@@ -76,7 +76,8 @@ export function classifyRef(contextBefore: string): EdgeType {
     c.includes('must have') ||
     c.includes('ensure') ||
     c.includes('active session')
-  ) return 'prerequisite';
+  )
+    return 'prerequisite';
 
   if (
     c.includes('full logic in') ||
@@ -85,7 +86,8 @@ export function classifyRef(contextBefore: string): EdgeType {
     c.includes('using') ||
     c.includes('invokes') ||
     (c.includes('step') && c.includes('run'))
-  ) return 'calls';
+  )
+    return 'calls';
 
   if (
     c.includes('suggest') ||
@@ -93,7 +95,8 @@ export function classifyRef(contextBefore: string): EdgeType {
     c.includes('next:') ||
     c.includes('then run') ||
     (c.includes('guide') && c.includes('run'))
-  ) return 'suggests';
+  )
+    return 'suggests';
 
   return 'references';
 }
@@ -127,30 +130,39 @@ export function buildHtml(graph: Graph): string {
 export function openBrowser(filePath: string): void {
   const cmds: Record<string, string> = {
     darwin: `open "${filePath}"`,
-    win32:  `start "" "${filePath}"`,
+    win32: `start "" "${filePath}"`,
   };
   const cmd = cmds[process.platform] ?? `xdg-open "${filePath}"`;
-  try { execSync(cmd); } catch { /* ignore */ }
+  try {
+    execSync(cmd);
+  } catch {
+    /* ignore */
+  }
 }
 
 export function main(): void {
   const skillsDir = findSkillsDir(process.cwd());
   if (!skillsDir) {
-    process.stderr.write(`Error: no .claude/skills/ directory found (searched from ${process.cwd()})\n`);
+    process.stderr.write(
+      `Error: no .claude/skills/ directory found (searched from ${process.cwd()})\n`,
+    );
     process.exit(1);
   }
 
-  const skillIds = fs.readdirSync(skillsDir).filter(e =>
-    fs.statSync(path.join(skillsDir, e)).isDirectory() &&
-    fs.existsSync(path.join(skillsDir, e, 'SKILL.md'))
-  );
+  const skillIds = fs
+    .readdirSync(skillsDir)
+    .filter(
+      (e) =>
+        fs.statSync(path.join(skillsDir, e)).isDirectory() &&
+        fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
+    );
 
   if (skillIds.length === 0) {
     process.stderr.write(`Error: no skills found in ${skillsDir}\n`);
     process.exit(1);
   }
 
-  const skills = skillIds.map(id => {
+  const skills = skillIds.map((id) => {
     const raw = fs.readFileSync(path.join(skillsDir, id, 'SKILL.md'), 'utf-8');
     const { meta, body } = parseFrontmatter(raw);
     return {
@@ -158,18 +170,24 @@ export function main(): void {
       name: meta['name'] ?? id,
       description: meta['description'] ?? '',
       allowedTools: meta['allowed-tools']
-        ? meta['allowed-tools'].split(',').map(t => t.trim()).filter(Boolean)
+        ? meta['allowed-tools']
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
         : [],
       body,
     };
   });
 
   const nodes: SkillNode[] = skills.map(({ id, name, description, allowedTools }) => ({
-    id, name, description, allowedTools,
+    id,
+    name,
+    description,
+    allowedTools,
   }));
 
-  const edges: SkillEdge[] = skills.flatMap(skill =>
-    extractEdges(skill.id, skill.body, skillIds)
+  const edges: SkillEdge[] = skills.flatMap((skill) =>
+    extractEdges(skill.id, skill.body, skillIds),
   );
 
   const graph: Graph = {
