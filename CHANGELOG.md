@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-04-26
+
+### Fixed
+- Inline `__GRAPH_DATA__` JSON corruption when skill bodies contain `$$`, `$&`, `$'`, or `` $` `` — `String.replace(string, replacement)` was interpreting these as substitution patterns; now uses a function replacer so the JSON is inserted verbatim. Symptom: `graph.html` failed to load due to a truncated/garbled inline payload (e.g. against repos like gstack)
+
 ## [1.5.0] - 2026-04-26
 
 ### Added

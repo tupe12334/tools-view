@@ -37,6 +37,30 @@ describe('buildHtml', () => {
     expect(html).toContain('<\\/script>');
   });
 
+  it('preserves $-prefixed sequences in body verbatim', () => {
+    const body = 'shell $$ pid $& match $\' tail $` head ${VAR}';
+    const graph = {
+      generated: '',
+      skillsDir: null,
+      agentsDir: null,
+      nodes: [
+        {
+          id: 'a',
+          name: 'A',
+          description: '',
+          allowedTools: [],
+          type: 'skill' as const,
+          body,
+        },
+      ],
+      edges: [],
+    };
+    const html = buildHtml(graph);
+    const start = html.indexOf('window.__GRAPH_DATA__ = ') + 'window.__GRAPH_DATA__ = '.length;
+    const expected = JSON.stringify(graph);
+    expect(html.slice(start, start + expected.length)).toBe(expected);
+  });
+
   it('returns string containing template content', () => {
     const graph = { generated: '', skillsDir: null, agentsDir: null, nodes: [], edges: [] };
     const html = buildHtml(graph);
