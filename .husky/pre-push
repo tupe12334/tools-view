@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "▶ pre-push: typecheck"
+pnpm tsc --noEmit || exit 1
+
+echo "▶ pre-push: tests with coverage"
+pnpm test:coverage || exit 1
+
+echo "▶ pre-push: build"
+pnpm build || exit 1

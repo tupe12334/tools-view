@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "▶ pre-commit: typecheck"
+pnpm tsc --noEmit || exit 1
+
+echo "▶ pre-commit: tests"
+pnpm test || exit 1
