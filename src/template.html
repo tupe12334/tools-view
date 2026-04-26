@@ -209,6 +209,26 @@
         return blocks;
       }
 
+      function highlightSkillNodes(mermaidCode) {
+        const skillIds = new Set(nodes.map((n) => n.id));
+        const nodeIdRegex = /([a-zA-Z0-9_-]+)\[(.*?)\]/g;
+        const matchedIds = new Set();
+        let match;
+        while ((match = nodeIdRegex.exec(mermaidCode)) !== null) {
+          const nodeId = match[1];
+          if (skillIds.has(nodeId)) {
+            matchedIds.add(nodeId);
+          }
+        }
+        if (matchedIds.size === 0) return mermaidCode;
+        const styleBlock =
+          '\n  style ' +
+          Array.from(matchedIds)
+            .map((id) => id + ' fill:#2d5a3d,stroke:#86efac,color:#e2e8f0,stroke-width:2px')
+            .join('; ');
+        return mermaidCode + styleBlock;
+      }
+
       function showMermaidModal(node) {
         if (!node.body) {
           alert('No diagram found for this ' + node.type);
@@ -224,7 +244,10 @@
         const body = document.getElementById('modal-body');
         title.textContent = node.name;
         body.innerHTML = mermaidBlocks
-          .map((block, i) => `<div class="mermaid" id="mermaid-${i}">${block}</div>`)
+          .map((block, i) => {
+            const highlighted = highlightSkillNodes(block);
+            return `<div class="mermaid" id="mermaid-${i}">${highlighted}</div>`;
+          })
           .join('<hr style="margin:20px 0;border:1px solid #3b4168;">');
         modal.classList.add('open');
         if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
