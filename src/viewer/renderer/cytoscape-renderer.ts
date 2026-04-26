@@ -33,6 +33,9 @@ export class CytoscapeRenderer implements GraphRenderer {
   private hoverHandler: ((e: NodeEvent) => void) | null = null;
   private blurHandler: (() => void) | null = null;
   private dragMoved = false;
+  private basePositions = new Map<string, { x: number; y: number }>();
+  private lastSpacingFactor = 1;
+  private currentLayoutKind: 'force' | 'hierarchical' = 'force';
 
   mount(container: HTMLElement, graph: Graph, theme: RendererTheme, layout: LayoutOpts): void {
     ensureRegistered();
@@ -63,9 +66,11 @@ export class CytoscapeRenderer implements GraphRenderer {
       elements,
       style: cytoscapeStylesheet(theme) as cytoscape.StylesheetJson,
       wheelSensitivity: 0.2,
-      layout: layoutConfig(layout, true),
     });
     this.cy = cy;
+    this.lastSpacingFactor = layout.spacingFactor;
+    this.currentLayoutKind = layout.kind;
+    this.runBaseLayout(layout, true);
 
     cy.on('tapstart', 'node', () => {
       this.dragMoved = false;
@@ -103,7 +108,64 @@ export class CytoscapeRenderer implements GraphRenderer {
 
   setLayout(opts: LayoutOpts): void {
     if (!this.cy) return;
-    this.cy.layout(layoutConfig(opts, false)).run();
+    if (opts.kind !== this.currentLayoutKind) {
+      this.currentLayoutKind = opts.kind;
+      this.lastSpacingFactor = opts.spacingFactor;
+      this.runBaseLayout(opts, true);
+      return;
+    }
+    this.applySpacingScale(opts.spacingFactor);
+    this.lastSpacingFactor = opts.spacingFactor;
+  }
+
+  private runBaseLayout(opts: LayoutOpts, fitAfter: boolean): void {
+    if (!this.cy) return;
+    const cy = this.cy;
+    const baseOpts: LayoutOpts = { kind: opts.kind, spacingFactor: 1 };
+    const lay = cy.layout(layoutConfig(baseOpts, true));
+    lay.one('layoutstop', () => {
+      this.basePositions.clear();
+      cy.nodes().forEach((n) => {
+        const p = n.position();
+        this.basePositions.set(n.id(), { x: p.x, y: p.y });
+      });
+      this.applySpacingScale(opts.spacingFactor);
+      if (fitAfter) cy.fit(undefined, 40);
+    });
+    lay.run();
+  }
+
+  private applySpacingScale(spacingFactor: number): void {
+    if (!this.cy) return;
+    const cy = this.cy;
+    const sf = Math.max(0.1, spacingFactor);
+    const viewCenterBefore = this.viewportCenter();
+    cy.batch(() => {
+      cy.nodes().forEach((n) => {
+        const base = this.basePositions.get(n.id());
+        if (!base) return;
+        n.position({ x: base.x * sf, y: base.y * sf });
+      });
+    });
+    const newCenter = this.bboxCenter();
+    if (!viewCenterBefore || !newCenter) return;
+    const z = cy.zoom();
+    cy.pan({
+      x: cy.width() / 2 - newCenter.x * z,
+      y: cy.height() / 2 - newCenter.y * z,
+    });
+  }
+
+  private viewportCenter(): { x: number; y: number } | null {
+    if (!this.cy) return null;
+    const ext = this.cy.extent();
+    return { x: (ext.x1 + ext.x2) / 2, y: (ext.y1 + ext.y2) / 2 };
+  }
+
+  private bboxCenter(): { x: number; y: number } | null {
+    if (!this.cy) return null;
+    const bb = this.cy.nodes().boundingBox();
+    return { x: (bb.x1 + bb.x2) / 2, y: (bb.y1 + bb.y2) / 2 };
   }
 
   onNodeClick(handler: (e: NodeEvent) => void): void {

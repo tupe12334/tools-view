@@ -22,3 +22,5 @@ words:
   - tapstart
   - halign
   - autorotate
+  - layoutstop
+  - bbox
