@@ -42,7 +42,15 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: ['src/lib.ts'],
+      include: [
+        'src/build-html.ts',
+        'src/classify-ref.ts',
+        'src/extract-edges.ts',
+        'src/find-skills-dir.ts',
+        'src/main.ts',
+        'src/open-browser.ts',
+        'src/parse-frontmatter.ts',
+      ],
       thresholds: {
         lines: 100,
         functions: 100,
