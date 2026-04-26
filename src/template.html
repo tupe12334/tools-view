@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Skills Graph</title>
+    <title>Graph</title>
     <style>
       * {
         box-sizing: border-box;
@@ -101,7 +101,17 @@
   </head>
   <body>
     <div id="bar">
-      <h1>Skills Graph</h1>
+      <h1 id="title">Graph</h1>
+      <div id="type-legend" style="display:flex;gap:10px;margin-left:14px;border-right:1px solid #2d3148;padding-right:14px;">
+        <div class="leg" id="leg-skill">
+          <div style="width:12px;height:12px;border-radius:3px;background:#1e2235;border:1.5px solid #4f5d8a"></div>
+          skill
+        </div>
+        <div class="leg" id="leg-agent">
+          <div style="width:12px;height:12px;border-radius:3px;background:#1a2820;border:1.5px solid #4a7c55"></div>
+          agent
+        </div>
+      </div>
       <div id="legend">
         <div class="leg">
           <div class="dot" style="background: #f87171"></div>
@@ -129,6 +139,20 @@
     <div id="tip"></div>
     <script>
       const G = __GRAPH_DATA__;
+
+      const hasSkills = G.nodes.some((n) => n.type === 'skill');
+      const hasAgents = G.nodes.some((n) => n.type === 'agent');
+      document.getElementById('title').textContent =
+        hasSkills && hasAgents ? 'Skills & Agents Graph' : hasAgents ? 'Agents Graph' : 'Skills Graph';
+      document.title = document.getElementById('title').textContent;
+      if (!hasSkills) document.getElementById('leg-skill').style.display = 'none';
+      if (!hasAgents) document.getElementById('leg-agent').style.display = 'none';
+      if (!hasSkills || !hasAgents) document.getElementById('type-legend').style.borderRight = 'none';
+
+      const NODE_FILL = { skill: '#1e2235', agent: '#1a2820' };
+      const NODE_BORDER = { skill: '#4f5d8a', agent: '#4a7c55' };
+      const NODE_FILL_DRAG = { skill: '#2d3458', agent: '#1f3d2a' };
+      const NODE_BORDER_DRAG = { skill: '#a5b4fc', agent: '#86efac' };
 
       const COLORS = {
         prerequisite: '#f87171',
@@ -300,9 +324,9 @@
             hh = n.h / 2;
           ctx.beginPath();
           ctx.roundRect(n.x - hw, n.y - hh, n.w, n.h, 6);
-          ctx.fillStyle = n === drag ? '#2d3458' : '#1e2235';
+          ctx.fillStyle = n === drag ? NODE_FILL_DRAG[n.type] : NODE_FILL[n.type];
           ctx.fill();
-          ctx.strokeStyle = n === drag ? '#a5b4fc' : '#4f5d8a';
+          ctx.strokeStyle = n === drag ? NODE_BORDER_DRAG[n.type] : NODE_BORDER[n.type];
           ctx.lineWidth = n === drag ? 2 : 1.5;
           ctx.stroke();
           ctx.font = 'bold 12px system-ui';
@@ -365,7 +389,8 @@
           const tools = n.allowedTools.length
             ? '<div class="t">Tools: ' + n.allowedTools.join(', ') + '</div>'
             : '';
-          tip.innerHTML = '<b>' + n.name + '</b><div>' + desc + '</div>' + tools;
+          const typeLabel = '<div class="t">' + n.type + '</div>';
+          tip.innerHTML = '<b>' + n.name + '</b>' + typeLabel + '<div>' + desc + '</div>' + tools;
           tip.style.display = 'block';
           const pad = 12,
             tw = tip.offsetWidth || 280;

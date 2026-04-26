@@ -9,6 +9,8 @@ import {
   extractEdges,
   buildHtml,
   findSkillsDir,
+  findAgentsDir,
+  parseToolsList,
   openBrowser,
   main,
   TYPE_PRIORITY,
@@ -189,6 +191,7 @@ describe('buildHtml', () => {
     const graph = {
       generated: '2024-01-01T00:00:00.000Z',
       skillsDir: 'skills',
+      agentsDir: null,
       nodes: [],
       edges: [],
     };
@@ -198,7 +201,7 @@ describe('buildHtml', () => {
   });
 
   it('returns string containing template content', () => {
-    const graph = { generated: '', skillsDir: '', nodes: [], edges: [] };
+    const graph = { generated: '', skillsDir: null, agentsDir: null, nodes: [], edges: [] };
     const html = buildHtml(graph);
     expect(typeof html).toBe('string');
     expect(html.length).toBeGreaterThan(100);
@@ -243,6 +246,77 @@ describe('findSkillsDir', () => {
 
   it('returns null when nothing found up to root', () => {
     expect(findSkillsDir(tmpDir)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// findAgentsDir
+// ---------------------------------------------------------------------------
+
+describe('findAgentsDir', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'toolsview-agents-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('finds .claude/agents in given dir', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    fs.mkdirSync(agentsDir, { recursive: true });
+    expect(findAgentsDir(tmpDir)).toBe(agentsDir);
+  });
+
+  it('finds .claude/agents in parent dir', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    fs.mkdirSync(agentsDir, { recursive: true });
+    const child = path.join(tmpDir, 'child');
+    fs.mkdirSync(child);
+    expect(findAgentsDir(child)).toBe(agentsDir);
+  });
+
+  it('returns null when .claude/agents is a file not dir', () => {
+    const claudeDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(claudeDir);
+    fs.writeFileSync(path.join(claudeDir, 'agents'), 'not a dir');
+    expect(findAgentsDir(tmpDir)).toBeNull();
+  });
+
+  it('returns null when nothing found up to root', () => {
+    expect(findAgentsDir(tmpDir)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parseToolsList
+// ---------------------------------------------------------------------------
+
+describe('parseToolsList', () => {
+  it('parses comma-separated string', () => {
+    expect(parseToolsList('Read, Bash, Write')).toEqual(['Read', 'Bash', 'Write']);
+  });
+
+  it('parses bracket array syntax', () => {
+    expect(parseToolsList('[Read, Bash, Write]')).toEqual(['Read', 'Bash', 'Write']);
+  });
+
+  it('trims whitespace around entries', () => {
+    expect(parseToolsList(' Read , Bash ')).toEqual(['Read', 'Bash']);
+  });
+
+  it('returns empty array for empty string', () => {
+    expect(parseToolsList('')).toEqual([]);
+  });
+
+  it('returns empty array for empty brackets', () => {
+    expect(parseToolsList('[]')).toEqual([]);
+  });
+
+  it('handles single tool', () => {
+    expect(parseToolsList('Bash')).toEqual(['Bash']);
   });
 });
 
@@ -315,16 +389,16 @@ describe('main', () => {
     cwdSpy.mockRestore();
   });
 
-  it('exits with 1 when no skills dir found', () => {
+  it('exits with 1 when neither skills nor agents dir found', () => {
     expect(() => main()).toThrow('exit:1');
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no .claude/skills/'));
   });
 
-  it('exits with 1 when skills dir has no skills', () => {
+  it('exits with 1 when skills dir has no skills and no agents dir', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     fs.mkdirSync(skillsDir, { recursive: true });
     expect(() => main()).toThrow('exit:1');
-    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no skills found'));
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no skills or agents found'));
   });
 
   it('ignores entries that are files (not dirs)', () => {
@@ -364,6 +438,7 @@ describe('main', () => {
     expect(json.nodes[0].name).toBe('my-skill');
     expect(json.nodes[0].description).toBe('');
     expect(json.nodes[0].allowedTools).toEqual([]);
+    expect(json.nodes[0].type).toBe('skill');
   });
 
   it('uses name/description/allowed-tools from frontmatter', () => {
@@ -441,5 +516,100 @@ describe('main', () => {
     main();
 
     expect(mockedExecSync).toHaveBeenCalled();
+  });
+
+  function makeAgent(agentsDir: string, id: string, content: string) {
+    fs.mkdirSync(agentsDir, { recursive: true });
+    fs.writeFileSync(path.join(agentsDir, `${id}.md`), content);
+  }
+
+  it('runs successfully with agents only', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    makeAgent(agentsDir, 'my-agent', '---\nname: My Agent\ndescription: Does stuff\ntools: [Bash, Read]\n---\nbody');
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.nodes).toHaveLength(1);
+    expect(json.nodes[0].id).toBe('my-agent');
+    expect(json.nodes[0].name).toBe('My Agent');
+    expect(json.nodes[0].description).toBe('Does stuff');
+    expect(json.nodes[0].allowedTools).toEqual(['Bash', 'Read']);
+    expect(json.nodes[0].type).toBe('agent');
+    expect(json.agentsDir).toBeTruthy();
+    expect(json.skillsDir).toBeNull();
+  });
+
+  it('parses agent tools as comma-separated string', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    makeAgent(agentsDir, 'my-agent', '---\ntools: Bash, Read\n---\nbody');
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.nodes[0].allowedTools).toEqual(['Bash', 'Read']);
+  });
+
+  it('exits with 1 when agents dir is empty', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    fs.mkdirSync(agentsDir, { recursive: true });
+    expect(() => main()).toThrow('exit:1');
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no skills or agents found'));
+  });
+
+  it('ignores non-.md files in agents dir', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    fs.mkdirSync(agentsDir, { recursive: true });
+    fs.writeFileSync(path.join(agentsDir, 'README.txt'), 'ignored');
+    expect(() => main()).toThrow('exit:1');
+  });
+
+  it('ignores dirs in agents dir', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    const subdir = path.join(agentsDir, 'subdir.md');
+    fs.mkdirSync(subdir, { recursive: true });
+    expect(() => main()).toThrow('exit:1');
+  });
+
+  it('runs successfully with both skills and agents', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    makeSkill(skillsDir, 'skill-a', '---\nname: Skill A\n---\nbody');
+    makeAgent(agentsDir, 'agent-b', '---\nname: Agent B\n---\nbody');
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.nodes).toHaveLength(2);
+    expect(json.skillsDir).toBeTruthy();
+    expect(json.agentsDir).toBeTruthy();
+    const types = json.nodes.map((n: { type: string }) => n.type).sort();
+    expect(types).toEqual(['agent', 'skill']);
+  });
+
+  it('extracts cross-edges between skills and agents', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    makeSkill(skillsDir, 'skill-a', '---\nname: A\n---\ncalls /agent-b here');
+    makeAgent(agentsDir, 'agent-b', '---\nname: B\n---\nbody');
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.edges).toHaveLength(1);
+    expect(json.edges[0]).toMatchObject({ from: 'skill-a', to: 'agent-b', type: 'calls' });
+  });
+
+  it('writes agents count to stderr', () => {
+    const agentsDir = path.join(tmpDir, '.claude', 'agents');
+    makeAgent(agentsDir, 'my-agent', 'body');
+
+    main();
+
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('Agents: 1'));
   });
 });

@@ -4,12 +4,14 @@ import { execSync } from 'child_process';
 import templateHtml from './template.html?raw';
 
 export type EdgeType = 'prerequisite' | 'calls' | 'suggests' | 'references';
+export type NodeType = 'skill' | 'agent';
 
 export interface SkillNode {
   id: string;
   name: string;
   description: string;
   allowedTools: string[];
+  type: NodeType;
 }
 
 export interface SkillEdge {
@@ -20,7 +22,8 @@ export interface SkillEdge {
 
 export interface Graph {
   generated: string;
-  skillsDir: string;
+  skillsDir: string | null;
+  agentsDir: string | null;
   nodes: SkillNode[];
   edges: SkillEdge[];
 }
@@ -48,6 +51,29 @@ export function findSkillsDir(startDir: string): string | null {
     if (parent === dir) return null;
     dir = parent;
   }
+}
+
+export function findAgentsDir(startDir: string): string | null {
+  let dir = startDir;
+  while (true) {
+    const candidate = path.join(dir, '.claude', 'agents');
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+      return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
+export function parseToolsList(value: string): string[] {
+  const trimmed = value.trim();
+  const inner =
+    trimmed.startsWith('[') && trimmed.endsWith(']') ? trimmed.slice(1, -1) : trimmed;
+  return inner
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
 }
 
 export function parseFrontmatter(content: string): ParsedFrontmatter {
@@ -142,62 +168,86 @@ export function openBrowser(filePath: string): void {
 
 export function main(): void {
   const skillsDir = findSkillsDir(process.cwd());
-  if (!skillsDir) {
+  const agentsDir = findAgentsDir(process.cwd());
+
+  if (!skillsDir && !agentsDir) {
     process.stderr.write(
-      `Error: no .claude/skills/ directory found (searched from ${process.cwd()})\n`,
+      `Error: no .claude/skills/ or .claude/agents/ directory found (searched from ${process.cwd()})\n`,
     );
     process.exit(1);
   }
 
-  const skillIds = fs
-    .readdirSync(skillsDir)
-    .filter(
-      (e) =>
-        fs.statSync(path.join(skillsDir, e)).isDirectory() &&
-        fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
-    );
+  const nodes: SkillNode[] = [];
+  const bodyMap = new Map<string, string>();
 
-  if (skillIds.length === 0) {
-    process.stderr.write(`Error: no skills found in ${skillsDir}\n`);
+  if (skillsDir) {
+    const skillIds = fs
+      .readdirSync(skillsDir)
+      .filter(
+        (e) =>
+          fs.statSync(path.join(skillsDir, e)).isDirectory() &&
+          fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
+      );
+    for (const id of skillIds) {
+      const raw = fs.readFileSync(path.join(skillsDir, id, 'SKILL.md'), 'utf-8');
+      const { meta, body } = parseFrontmatter(raw);
+      nodes.push({
+        id,
+        name: meta['name'] ?? id,
+        description: meta['description'] ?? '',
+        allowedTools: meta['allowed-tools']
+          ? meta['allowed-tools']
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
+        type: 'skill',
+      });
+      bodyMap.set(id, body);
+    }
+  }
+
+  if (agentsDir) {
+    const agentFiles = fs
+      .readdirSync(agentsDir)
+      .filter(
+        (e) => e.endsWith('.md') && fs.statSync(path.join(agentsDir, e)).isFile(),
+      );
+    for (const file of agentFiles) {
+      const id = file.replace(/\.md$/, '');
+      const raw = fs.readFileSync(path.join(agentsDir, file), 'utf-8');
+      const { meta, body } = parseFrontmatter(raw);
+      nodes.push({
+        id,
+        name: meta['name'] ?? id,
+        description: meta['description'] ?? '',
+        allowedTools: meta['tools'] ? parseToolsList(meta['tools']) : [],
+        type: 'agent',
+      });
+      bodyMap.set(id, body);
+    }
+  }
+
+  if (nodes.length === 0) {
+    process.stderr.write(`Error: no skills or agents found\n`);
     process.exit(1);
   }
 
-  const skills = skillIds.map((id) => {
-    const raw = fs.readFileSync(path.join(skillsDir, id, 'SKILL.md'), 'utf-8');
-    const { meta, body } = parseFrontmatter(raw);
-    return {
-      id,
-      name: meta['name'] ?? id,
-      description: meta['description'] ?? '',
-      allowedTools: meta['allowed-tools']
-        ? meta['allowed-tools']
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : [],
-      body,
-    };
-  });
-
-  const nodes: SkillNode[] = skills.map(({ id, name, description, allowedTools }) => ({
-    id,
-    name,
-    description,
-    allowedTools,
-  }));
-
-  const edges: SkillEdge[] = skills.flatMap((skill) =>
-    extractEdges(skill.id, skill.body, skillIds),
-  );
+  const allIds = nodes.map((n) => n.id);
+  const edges: SkillEdge[] = [];
+  for (const [id, body] of bodyMap) {
+    edges.push(...extractEdges(id, body, allIds));
+  }
 
   const graph: Graph = {
     generated: new Date().toISOString(),
-    skillsDir: path.relative(process.cwd(), skillsDir),
+    skillsDir: skillsDir ? path.relative(process.cwd(), skillsDir) : null,
+    agentsDir: agentsDir ? path.relative(process.cwd(), agentsDir) : null,
     nodes,
     edges,
   };
 
-  const claudeDir = path.dirname(skillsDir);
+  const claudeDir = path.dirname(skillsDir ?? agentsDir!);
   const outDir = path.join(claudeDir, 'graph');
   fs.mkdirSync(outDir, { recursive: true });
 
@@ -215,7 +265,9 @@ export function main(): void {
   const htmlPath = path.join(outDir, 'graph.html');
   fs.writeFileSync(htmlPath, buildHtml(graph));
 
-  process.stderr.write(`Skills: ${nodes.length}  Edges: ${edges.length}\n`);
+  const skillCount = nodes.filter((n) => n.type === 'skill').length;
+  const agentCount = nodes.filter((n) => n.type === 'agent').length;
+  process.stderr.write(`Skills: ${skillCount}  Agents: ${agentCount}  Edges: ${edges.length}\n`);
   process.stderr.write(`Written → ${jsonPath}\n`);
   process.stderr.write(`Opening → ${htmlPath}\n`);
 
