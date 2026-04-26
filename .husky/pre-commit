@@ -4,6 +4,9 @@
 echo "▶ pre-commit: spell check"
 pnpm spell || exit 1
 
+echo "▶ pre-commit: lint"
+pnpm lint || exit 1
+
 echo "▶ pre-commit: typecheck"
 pnpm tsc --noEmit || exit 1
 
