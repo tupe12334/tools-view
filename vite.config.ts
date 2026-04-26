@@ -43,20 +43,8 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: [
-        'src/build-html.ts',
-        'src/classify-ref.ts',
-        'src/extract-edges.ts',
-        'src/find-agents-dir.ts',
-        'src/find-skills-dir.ts',
-        'src/main.ts',
-        'src/open-browser.ts',
-        'src/parse-agent.ts',
-        'src/parse-frontmatter.ts',
-        'src/parse-skill.ts',
-        'src/parse-tools-list.ts',
-        'src/skill-call/extract-skill-call-edges.ts',
-      ],
+      include: ['src/**/*.ts'],
+      exclude: ['src/index.ts', 'src/lib.ts'],
       thresholds: {
         lines: 100,
         functions: 100,
