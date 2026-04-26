@@ -40,7 +40,7 @@ export function main(): void {
       );
     for (const id of skillIds) {
       const { body, ...node } = parseSkill(skillsDir, id);
-      nodes.push({ ...node, type: 'skill' });
+      nodes.push({ ...node, type: 'skill', body });
       bodyMap.set(id, body);
     }
   }
@@ -50,7 +50,7 @@ export function main(): void {
       .filter((e) => e.endsWith('.md') && fs.statSync(path.join(agentsDir, e)).isFile());
     for (const file of agentFiles) {
       const { body, ...node } = parseAgent(agentsDir, file);
-      nodes.push({ ...node, type: 'agent' });
+      nodes.push({ ...node, type: 'agent', body });
       bodyMap.set(node.id, body);
     }
   }

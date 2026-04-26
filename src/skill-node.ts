@@ -6,4 +6,5 @@ export interface SkillNode {
   description: string;
   allowedTools: string[];
   type: NodeType;
+  body?: string;
 }

@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -97,6 +98,57 @@
         margin-top: 5px;
         font-size: 11px;
       }
+      #modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 99;
+      }
+      #modal.open {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #modal-content {
+        background: #1a1d27;
+        border: 1px solid #3b4168;
+        border-radius: 10px;
+        padding: 24px;
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow: auto;
+        color: #e2e8f0;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+      #modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #a5b4fc;
+      }
+      #modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #3b4168;
+        border: none;
+        color: #e2e8f0;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 14px;
+      }
+      #modal-close:hover {
+        background: #4f5d8a;
+      }
+      .mermaid {
+        display: flex;
+        justify-content: center;
+      }
     </style>
   </head>
   <body>
@@ -137,8 +189,46 @@
     </div>
     <canvas id="c"></canvas>
     <div id="tip"></div>
+    <div id="modal">
+      <div id="modal-content">
+        <button id="modal-close">×</button>
+        <div id="modal-title"></div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
     <script>
       const G = __GRAPH_DATA__;
+
+      function extractMermaidBlocks(body) {
+        const blocks = [];
+        const regex = /```mermaid\n([\s\S]*?)\n```/g;
+        let match;
+        while ((match = regex.exec(body)) !== null) {
+          blocks.push(match[1]);
+        }
+        return blocks;
+      }
+
+      function showMermaidModal(node) {
+        if (!node.body) {
+          alert('No diagram found for this ' + node.type);
+          return;
+        }
+        const mermaidBlocks = extractMermaidBlocks(node.body);
+        if (mermaidBlocks.length === 0) {
+          alert('No mermaid diagrams found in ' + node.name);
+          return;
+        }
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modal-title');
+        const body = document.getElementById('modal-body');
+        title.textContent = node.name;
+        body.innerHTML = mermaidBlocks
+          .map((block, i) => `<div class="mermaid" id="mermaid-${i}">${block}</div>`)
+          .join('<hr style="margin:20px 0;border:1px solid #3b4168;">');
+        modal.classList.add('open');
+        mermaid.contentLoaded();
+      }
 
       const hasSkills = G.nodes.some((n) => n.type === 'skill');
       const hasAgents = G.nodes.some((n) => n.type === 'agent');
@@ -171,6 +261,8 @@
       let drag = null,
         panDrag = null;
       let spacingFactor = 1;
+      let clickNode = null,
+        clickPos = null;
 
       document.getElementById('spacing').addEventListener('input', (e) => {
         spacingFactor = e.target.value / 5;
@@ -358,6 +450,8 @@
         const n = hitNode(x, y);
         if (n) {
           drag = n;
+          clickNode = n;
+          clickPos = { x: e.offsetX, y: e.offsetY };
           canvas.classList.add('grabbing');
         } else {
           panDrag = { sx: e.offsetX - pan.x, sy: e.offsetY - pan.y };
@@ -403,9 +497,19 @@
         }
       });
 
-      window.addEventListener('mouseup', () => {
+      window.addEventListener('mouseup', (e) => {
+        if (clickNode && clickPos) {
+          const dx = e.clientX - clickPos.x;
+          const dy = e.clientY - clickPos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 5) {
+            showMermaidModal(clickNode);
+          }
+        }
         drag = null;
         panDrag = null;
+        clickNode = null;
+        clickPos = null;
         canvas.classList.remove('grabbing');
       });
 
@@ -420,6 +524,17 @@
         },
         { passive: false },
       );
+
+      const modal = document.getElementById('modal');
+      const closeBtn = document.getElementById('modal-close');
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('open');
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('open');
+        }
+      });
 
       window.addEventListener('resize', resize);
       resize();
