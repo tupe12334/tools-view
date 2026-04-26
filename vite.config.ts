@@ -61,7 +61,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/index.ts', 'src/lib.ts', 'src/viewer/main.ts'],
+      exclude: [
+        'src/index.ts',
+        'src/lib.ts',
+        'src/viewer/main.ts',
+        'src/viewer/renderer/cytoscape-renderer.ts',
+      ],
       thresholds: {
         lines: 100,
         functions: 100,

@@ -1,6 +1,6 @@
 {
   "name": "toolsview",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Analyze Claude skill relationships and emit a graph JSON + HTML viewer",
   "type": "module",
   "bin": {
@@ -47,5 +47,10 @@
     "typescript": "^5.4.5",
     "vite": "^6.4.2",
     "vitest": "^4.1.5"
+  },
+  "dependencies": {
+    "cytoscape": "^3.33.2",
+    "cytoscape-dagre": "^2.5.0",
+    "cytoscape-fcose": "^2.2.0"
   }
 }

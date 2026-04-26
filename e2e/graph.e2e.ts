@@ -23,7 +23,7 @@ test.describe('toolsview graph viewer', () => {
     await page.goto('graph.html');
     await expect(page).toHaveTitle(/Skills/);
     await expect(page.locator('#title')).toHaveText(/Skills/);
-    await expect(page.locator('canvas#c')).toBeVisible();
+    await expect(page.locator('#c')).toBeVisible();
     await expect(page.locator('#leg-skill')).toBeVisible();
 
     const ids = await page.evaluate(() => {
@@ -39,27 +39,18 @@ test.describe('toolsview graph viewer', () => {
   test('opens mermaid.live in new tab on node click', async ({ page, context }) => {
     await page.goto('graph.html');
 
-    await page.waitForFunction(
-      () => {
-        const tv = (window as unknown as { __toolsview?: { nodes?: { x: number }[] } })
-          .__toolsview;
-        return Boolean(tv && tv.nodes && tv.nodes.length > 0);
-      },
-    );
+    await page.waitForFunction(() => {
+      const tv = (
+        window as unknown as { __toolsview?: { clickNode?: (id: string) => void } }
+      ).__toolsview;
+      return Boolean(tv && typeof tv.clickNode === 'function');
+    });
 
     const popupPromise = context.waitForEvent('page');
     await page.evaluate(() => {
-      type N = { id: string; x: number; y: number };
-      const tv = (window as unknown as { __toolsview: { nodes: N[] } }).__toolsview;
-      const node = tv.nodes.find((n) => n.id === 'test-skill');
-      if (!node) throw new Error('test-skill node missing');
-      const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-      const rect = canvas.getBoundingClientRect();
-      const clientX = rect.left + node.x;
-      const clientY = rect.top + node.y;
-      const opts: MouseEventInit = { clientX, clientY, bubbles: true, button: 0 };
-      canvas.dispatchEvent(new MouseEvent('mousedown', opts));
-      window.dispatchEvent(new MouseEvent('mouseup', opts));
+      const tv = (window as unknown as { __toolsview: { clickNode: (id: string) => void } })
+        .__toolsview;
+      tv.clickNode('test-skill');
     });
 
     const popup = await popupPromise;

@@ -65,13 +65,10 @@
         width: 90px;
         cursor: pointer;
       }
-      canvas {
+      #c {
         flex: 1;
         display: block;
-        cursor: grab;
-      }
-      canvas.grabbing {
-        cursor: grabbing;
+        background: #0f1117;
       }
       #tip {
         position: fixed;
@@ -135,7 +132,7 @@
         <input id="spacing" type="range" min="1" max="10" value="5" step="1" />
       </div>
     </div>
-    <canvas id="c"></canvas>
+    <div id="c"></div>
     <div id="tip"></div>
     <script>window.__GRAPH_DATA__ = /*__GRAPH_DATA_PLACEHOLDER__*/null;</script>
     <script>/*__VIEWER_BUNDLE__*/</script>
