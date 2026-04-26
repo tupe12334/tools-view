@@ -13,6 +13,7 @@ export * from './parse-agent.js';
 export * from './parse-frontmatter.js';
 export * from './parse-skill.js';
 export * from './parse-tools-list.js';
+export * from './skill-call/extract-skill-call-edges.js';
 export * from './parsed-frontmatter.js';
 export * from './skill-edge.js';
 export * from './skill-node.js';

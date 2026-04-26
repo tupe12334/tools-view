@@ -55,6 +55,7 @@ export default defineConfig({
         'src/parse-frontmatter.ts',
         'src/parse-skill.ts',
         'src/parse-tools-list.ts',
+        'src/skill-call/extract-skill-call-edges.ts',
       ],
       thresholds: {
         lines: 100,
