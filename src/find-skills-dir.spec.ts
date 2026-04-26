@@ -1,0 +1,42 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { findSkillsDir } from './find-skills-dir.js';
+
+describe('findSkillsDir', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'toolsview-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  it('finds .claude/skills in given dir', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    fs.mkdirSync(skillsDir, { recursive: true });
+    expect(findSkillsDir(tmpDir)).toBe(skillsDir);
+  });
+
+  it('finds .claude/skills in parent dir', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    fs.mkdirSync(skillsDir, { recursive: true });
+    const child = path.join(tmpDir, 'child');
+    fs.mkdirSync(child);
+    expect(findSkillsDir(child)).toBe(skillsDir);
+  });
+
+  it('returns null when .claude/skills is a file not dir', () => {
+    const claudeDir = path.join(tmpDir, '.claude');
+    fs.mkdirSync(claudeDir);
+    fs.writeFileSync(path.join(claudeDir, 'skills'), 'not a dir');
+    expect(findSkillsDir(tmpDir)).toBeNull();
+  });
+
+  it('returns null when nothing found up to root', () => {
+    expect(findSkillsDir(tmpDir)).toBeNull();
+  });
+});
