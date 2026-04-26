@@ -1,7 +1,10 @@
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 8765;
-const baseURL = `http://localhost:${PORT}`;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const graphDir = path.resolve(__dirname, 'examples', '.claude', 'graph');
+const baseURL = pathToFileURL(graphDir).href + '/';
 
 export default defineConfig({
   testDir: './e2e',
@@ -9,6 +12,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: 'list',
+  globalSetup: './e2e/global-setup.ts',
   use: {
     baseURL,
     trace: 'retain-on-failure',
@@ -19,14 +23,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'node ../dist/index.js',
-    cwd: 'examples',
-    url: `${baseURL}/graph.html`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
-    env: {
-      TOOLSVIEW_NO_OPEN: '1',
-    },
-  },
 });

@@ -1,10 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
+const here = path.dirname(fileURLToPath(import.meta.url));
+const graphJsonPath = path.resolve(here, '..', 'examples', '.claude', 'graph', 'graph.json');
+
 test.describe('toolsview graph viewer', () => {
-  test('serves graph.json with expected nodes and edges', async ({ request }) => {
-    const res = await request.get('/graph.json');
-    expect(res.ok()).toBe(true);
-    const graph = await res.json();
+  test('emits graph.json with expected nodes and edges', () => {
+    const graph = JSON.parse(fs.readFileSync(graphJsonPath, 'utf-8'));
     const ids = graph.nodes
       .filter((n: { type: string }) => n.type === 'skill')
       .map((n: { id: string }) => n.id)
@@ -16,7 +20,7 @@ test.describe('toolsview graph viewer', () => {
   });
 
   test('embeds graph data into html and renders chrome', async ({ page }) => {
-    await page.goto('/graph.html');
+    await page.goto('graph.html');
     await expect(page).toHaveTitle(/Skills/);
     await expect(page.locator('#title')).toHaveText(/Skills/);
     await expect(page.locator('canvas#c')).toBeVisible();
@@ -33,7 +37,7 @@ test.describe('toolsview graph viewer', () => {
   });
 
   test('opens mermaid modal on node click', async ({ page }) => {
-    await page.goto('/graph.html');
+    await page.goto('graph.html');
     const modal = page.locator('#modal');
     await expect(modal).toBeHidden();
 

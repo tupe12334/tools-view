@@ -1,31 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import http from 'node:http';
-import type { IncomingMessage, ServerResponse } from 'node:http';
-
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-};
-
-export function createRequestHandler(outDir: string) {
-  return (req: IncomingMessage, res: ServerResponse): void => {
-    const reqUrl = !req.url || req.url === '/' ? '/graph.html' : req.url;
-    const safe = path.normalize(reqUrl).replace(/^(\.\.[/\\])+/, '');
-    const filePath = path.join(outDir, safe);
-    try {
-      const content = fs.readFileSync(filePath);
-      const type = MIME[path.extname(filePath)] ?? 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': type });
-      res.end(content);
-    } catch {
-      res.writeHead(404);
-      res.end('Not found');
-    }
-  };
-}
+import { pathToFileURL } from 'node:url';
 import type { Graph } from './graph.js';
 import type { SkillNode } from './skill-node.js';
 import { buildHtml } from './build-html.js';
@@ -112,11 +87,7 @@ export function main(): void {
   );
   process.stderr.write(`Written → ${jsonPath}\n`);
 
-  const PORT = 8765;
-  const server = http.createServer(createRequestHandler(outDir));
-  server.listen(PORT, () => {
-    const url = `http://localhost:${PORT}/graph.html`;
-    process.stderr.write(`Opening → ${url}\n`);
-    openBrowser(url);
-  });
+  const url = pathToFileURL(htmlPath).href;
+  process.stderr.write(`Opening → ${url}\n`);
+  openBrowser(url);
 }
