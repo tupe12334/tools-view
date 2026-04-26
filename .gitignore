@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+.playwright-mcp
 
 # OS
 .DS_Store
