@@ -1,33 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import type { Graph } from './graph.js';
-import type { SkillEdge } from './skill-edge.js';
 import type { SkillNode } from './skill-node.js';
 import { buildHtml } from './build-html.js';
 import { extractEdges } from './extract-edges.js';
+import { findAgentsDir } from './find-agents-dir.js';
 import { findSkillsDir } from './find-skills-dir.js';
 import { openBrowser } from './open-browser.js';
-import { parseFrontmatter } from './parse-frontmatter.js';
-
-function parseSkill(skillsDir: string, id: string) {
-  const raw = fs.readFileSync(path.join(skillsDir, id, 'SKILL.md'), 'utf-8');
-  const { meta, body } = parseFrontmatter(raw);
-  const allowedToolsRaw = meta['allowed-tools'];
-  const allowedTools =
-    allowedToolsRaw !== undefined
-      ? allowedToolsRaw
-          .split(',')
-          .map((t) => t.trim())
-          .filter((t) => t !== '')
-      : [];
-  return {
-    id,
-    name: meta.name !== undefined ? meta.name : id,
-    description: meta.description !== undefined ? meta.description : '',
-    allowedTools,
-    body,
-  };
-}
+import { parseAgent } from './parse-agent.js';
+import { parseSkill } from './parse-skill.js';
 
 function updateGitignore(gitignorePath: string): void {
   if (!fs.existsSync(gitignorePath)) {
@@ -40,54 +21,68 @@ function updateGitignore(gitignorePath: string): void {
 
 export function main(): void {
   const skillsDir = findSkillsDir(process.cwd());
-  if (!skillsDir) {
+  const agentsDir = findAgentsDir(process.cwd());
+  if (!skillsDir && !agentsDir) {
     process.stderr.write(
-      `Error: no .claude/skills/ directory found (searched from ${process.cwd()})\n`,
+      `Error: no .claude/skills/ or .claude/agents/ directory found (searched from ${process.cwd()})\n`,
     );
     process.exit(1);
   }
-
-  const skillIds = fs
-    .readdirSync(skillsDir)
-    .filter(
-      (e) =>
-        fs.statSync(path.join(skillsDir, e)).isDirectory() &&
-        fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
-    );
-
-  if (skillIds.length === 0) {
-    process.stderr.write(`Error: no skills found in ${skillsDir}\n`);
+  const nodes: SkillNode[] = [];
+  const bodyMap = new Map<string, string>();
+  if (skillsDir !== null) {
+    const skillIds = fs
+      .readdirSync(skillsDir)
+      .filter(
+        (e) =>
+          fs.statSync(path.join(skillsDir, e)).isDirectory() &&
+          fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
+      );
+    for (const id of skillIds) {
+      const { body, ...node } = parseSkill(skillsDir, id);
+      nodes.push({ ...node, type: 'skill' });
+      bodyMap.set(id, body);
+    }
+  }
+  if (agentsDir !== null) {
+    const agentFiles = fs
+      .readdirSync(agentsDir)
+      .filter((e) => e.endsWith('.md') && fs.statSync(path.join(agentsDir, e)).isFile());
+    for (const file of agentFiles) {
+      const { body, ...node } = parseAgent(agentsDir, file);
+      nodes.push({ ...node, type: 'agent' });
+      bodyMap.set(node.id, body);
+    }
+  }
+  if (nodes.length === 0) {
+    process.stderr.write(`Error: no skills or agents found\n`);
     process.exit(1);
   }
-
-  const skills = skillIds.map((id) => parseSkill(skillsDir, id));
-  const nodes: SkillNode[] = skills.map(({ id, name, description, allowedTools }) => ({
-    id,
-    name,
-    description,
-    allowedTools,
-  }));
-  const edges: SkillEdge[] = skills.flatMap((skill) =>
-    extractEdges(skill.id, skill.body, skillIds),
-  );
+  const allIds = nodes.map((n) => n.id);
+  const edges = [...bodyMap.entries()].flatMap(([id, body]) => extractEdges(id, body, allIds));
   const graph: Graph = {
     generated: new Date().toISOString(),
-    skillsDir: path.relative(process.cwd(), skillsDir),
+    skillsDir: skillsDir !== null ? path.relative(process.cwd(), skillsDir) : null,
+    agentsDir: agentsDir !== null ? path.relative(process.cwd(), agentsDir) : null,
     nodes,
     edges,
   };
-
-  const claudeDir = path.dirname(skillsDir);
+  let claudeDir = skillsDir !== null ? path.dirname(skillsDir) : '';
+  if (agentsDir !== null && skillsDir === null) {
+    claudeDir = path.dirname(agentsDir);
+  }
   const outDir = path.join(claudeDir, 'graph');
   fs.mkdirSync(outDir, { recursive: true });
   updateGitignore(path.join(outDir, '.gitignore'));
-
   const jsonPath = path.join(outDir, 'graph.json');
   fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2) + '\n');
   const htmlPath = path.join(outDir, 'graph.html');
   fs.writeFileSync(htmlPath, buildHtml(graph));
-
-  process.stderr.write(`Skills: ${String(nodes.length)}  Edges: ${String(edges.length)}\n`);
+  const skillCount = nodes.filter((n) => n.type === 'skill').length;
+  const agentCount = nodes.filter((n) => n.type === 'agent').length;
+  process.stderr.write(
+    `Skills: ${String(skillCount)}  Agents: ${String(agentCount)}  Edges: ${String(edges.length)}\n`,
+  );
   process.stderr.write(`Written → ${jsonPath}\n`);
   process.stderr.write(`Opening → ${htmlPath}\n`);
   openBrowser(htmlPath);

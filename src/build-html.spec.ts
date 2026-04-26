@@ -6,6 +6,7 @@ describe('buildHtml', () => {
     const graph = {
       generated: '2024-01-01T00:00:00.000Z',
       skillsDir: 'skills',
+      agentsDir: null,
       nodes: [],
       edges: [],
     };
@@ -15,7 +16,7 @@ describe('buildHtml', () => {
   });
 
   it('returns string containing template content', () => {
-    const graph = { generated: '', skillsDir: '', nodes: [], edges: [] };
+    const graph = { generated: '', skillsDir: null, agentsDir: null, nodes: [], edges: [] };
     const html = buildHtml(graph);
     expect(typeof html).toBe('string');
     expect(html.length).toBeGreaterThan(100);
