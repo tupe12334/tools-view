@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { fileURLToPath } from 'url';
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -105,14 +104,6 @@ export function main(): void {
   fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2) + '\n');
   const htmlPath = path.join(outDir, 'graph.html');
   fs.writeFileSync(htmlPath, buildHtml(graph));
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const mermaidSrc = path.join(__dirname, '..', 'node_modules', 'mermaid', 'dist', 'mermaid.min.js');
-  const mermaidDest = path.join(outDir, 'mermaid.min.js');
-  if (fs.existsSync(mermaidSrc)) {
-    fs.copyFileSync(mermaidSrc, mermaidDest);
-  }
 
   const skillCount = nodes.filter((n) => n.type === 'skill').length;
   const agentCount = nodes.filter((n) => n.type === 'agent').length;
