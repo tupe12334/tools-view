@@ -6,6 +6,7 @@ import type { SkillNode } from './skill-node.js';
 import { buildHtml } from './build-html.js';
 import { extractEdges } from './extract-edges.js';
 import { findAgentsDir } from './find-agents-dir.js';
+import { findSkillIds } from './find-skill-ids.js';
 import { findSkillsDir } from './find-skills-dir.js';
 import { openBrowser } from './open-browser.js';
 import { parseAgent } from './parse-agent.js';
@@ -32,15 +33,8 @@ export function main(): void {
   const nodes: SkillNode[] = [];
   const bodyMap = new Map<string, string>();
   if (skillsDir !== null) {
-    const skillIds = fs
-      .readdirSync(skillsDir)
-      .filter(
-        (e) =>
-          fs.statSync(path.join(skillsDir, e)).isDirectory() &&
-          fs.existsSync(path.join(skillsDir, e, 'SKILL.md')),
-      );
-    for (const id of skillIds) {
-      const { body, ...node } = parseSkill(skillsDir, id);
+    for (const { id, parentDir } of findSkillIds(skillsDir)) {
+      const { body, ...node } = parseSkill(parentDir, id);
       nodes.push({ ...node, type: 'skill', body });
       bodyMap.set(id, body);
     }

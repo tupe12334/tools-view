@@ -39,4 +39,18 @@ describe('findSkillsDir', () => {
   it('returns null when nothing found up to root', () => {
     expect(findSkillsDir(tmpDir)).toBeNull();
   });
+
+  it('finds top-level skills/ dir when it contains SKILL.md', () => {
+    const skillsDir = path.join(tmpDir, 'skills');
+    const skillDir = path.join(skillsDir, 'cloud', 'my-skill');
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(path.join(skillDir, 'SKILL.md'), '---\nname: my-skill\n---\nbody');
+    expect(findSkillsDir(tmpDir)).toBe(skillsDir);
+  });
+
+  it('ignores top-level skills/ dir without any SKILL.md', () => {
+    const skillsDir = path.join(tmpDir, 'skills');
+    fs.mkdirSync(path.join(skillsDir, 'sub'), { recursive: true });
+    expect(findSkillsDir(tmpDir)).toBeNull();
+  });
 });
