@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-26
+
+### Changed
+- Node click now opens the diagram in a new `mermaid.live` tab (URL-safe base64 state) instead of an in-page modal
+
+### Removed
+- In-page mermaid modal, mermaid CDN script, and unused `mermaid` runtime dependency
+
 ## [1.3.0] - 2026-04-26
 
 ### Added
