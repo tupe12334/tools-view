@@ -1,7 +1,8 @@
 import { execSync } from 'child_process';
 
 export function openBrowser(filePath: string): void {
-  if (process.env.TOOLSVIEW_NO_OPEN === '1') return;
+  const { TOOLSVIEW_NO_OPEN } = process.env;
+  if (TOOLSVIEW_NO_OPEN === '1') return;
   const cmds: Partial<Record<NodeJS.Platform, string>> = {
     darwin: `open "${filePath}"`,
     win32: `start "" "${filePath}"`,

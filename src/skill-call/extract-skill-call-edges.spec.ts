@@ -42,4 +42,18 @@ describe('extractSkillCallEdges', () => {
     const edges = extractSkillCallEdges('a', 'Skill( skill = "b" )', ['a', 'b']);
     expect(edges[0].to).toBe('b');
   });
+
+  it('extracts edge from Agent() prompt with single-quoted skill arg', () => {
+    const body = `Agent(\n  subagent_type: general-purpose\n  prompt: "Use the Skill tool to invoke skill='b' with args='X | Y'."\n)`;
+    const edges = extractSkillCallEdges('a', body, ['a', 'b']);
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).toMatchObject({ from: 'a', to: 'b', type: 'calls' });
+  });
+
+  it('extracts edge from Agent() prompt with double-quoted skill arg', () => {
+    const body = `Agent(prompt: 'invoke skill="b" please')`;
+    const edges = extractSkillCallEdges('a', body, ['a', 'b']);
+    expect(edges).toHaveLength(1);
+    expect(edges[0].to).toBe('b');
+  });
 });

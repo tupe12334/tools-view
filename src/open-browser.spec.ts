@@ -36,12 +36,13 @@ describe('openBrowser', () => {
   });
 
   it('skips when TOOLSVIEW_NO_OPEN=1', () => {
-    const orig = process.env.TOOLSVIEW_NO_OPEN;
-    process.env.TOOLSVIEW_NO_OPEN = '1';
+    const env = process.env;
+    const { TOOLSVIEW_NO_OPEN: orig } = env;
+    env.TOOLSVIEW_NO_OPEN = '1';
     openBrowser('/tmp/graph.html');
     expect(mockedExecSync).not.toHaveBeenCalled();
-    if (orig === undefined) delete process.env.TOOLSVIEW_NO_OPEN;
-    else process.env.TOOLSVIEW_NO_OPEN = orig;
+    if (orig === undefined) delete env.TOOLSVIEW_NO_OPEN;
+    else env.TOOLSVIEW_NO_OPEN = orig;
   });
 
   it('silently ignores execSync errors', () => {

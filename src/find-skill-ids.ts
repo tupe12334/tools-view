@@ -1,10 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-
-export interface SkillEntry {
-  id: string;
-  parentDir: string;
-}
+import type { SkillEntry } from './skill-entry.js';
 
 export function findSkillIds(skillsDir: string): SkillEntry[] {
   const out: SkillEntry[] = [];
