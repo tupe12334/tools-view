@@ -11,6 +11,8 @@ body{background:#0f1117;color:#e2e8f0;font-family:system-ui,sans-serif;height:10
 #legend{display:flex;gap:14px;margin-left:auto}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8}
 .dot{width:9px;height:9px;border-radius:50%}
+#spacing-wrap{display:flex;align-items:center;gap:7px;font-size:11px;color:#94a3b8;margin-left:18px;border-left:1px solid #2d3148;padding-left:18px}
+#spacing{accent-color:#a5b4fc;width:90px;cursor:pointer}
 canvas{flex:1;display:block;cursor:grab}
 canvas.grabbing{cursor:grabbing}
 #tip{position:fixed;display:none;background:#1e2235;border:1px solid #3b4168;border-radius:7px;padding:9px 13px;font-size:12px;max-width:280px;pointer-events:none;z-index:9;line-height:1.5}
@@ -26,6 +28,10 @@ canvas.grabbing{cursor:grabbing}
     <div class="leg"><div class="dot" style="background:#60a5fa"></div>calls</div>
     <div class="leg"><div class="dot" style="background:#34d399"></div>suggests</div>
     <div class="leg"><div class="dot" style="background:#94a3b8"></div>references</div>
+  </div>
+  <div id="spacing-wrap">
+    <span>Spacing</span>
+    <input id="spacing" type="range" min="1" max="10" value="5" step="1">
   </div>
 </div>
 <canvas id="c"></canvas>
@@ -47,6 +53,12 @@ const tip = document.getElementById('tip');
 let W, H;
 let pan = {x:0, y:0}, scale = 1;
 let drag = null, panDrag = null;
+let spacingFactor = 1;
+
+document.getElementById('spacing').addEventListener('input', e => {
+  spacingFactor = e.target.value / 5;
+  ticks = 0;
+});
 
 const nodes = G.nodes.map(n => ({ ...n, x: 0, y: 0, vx: 0, vy: 0, w: 0, h: 0 }));
 const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
@@ -75,7 +87,7 @@ function measureNodes() {
 }
 
 function tick() {
-  const k = 200, repulsion = 8000, damping = 0.82, dt = 0.6;
+  const k = 200 * spacingFactor, repulsion = 8000 * spacingFactor * spacingFactor, damping = 0.82, dt = 0.6;
 
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i+1; j < nodes.length; j++) {
