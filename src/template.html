@@ -198,6 +198,7 @@
     </div>
     <script>
       const G = __GRAPH_DATA__;
+      window.__toolsview = { G };
 
       function extractMermaidBlocks(body) {
         const blocks = [];
@@ -299,6 +300,7 @@
       const nodes = G.nodes.map((n) => ({ ...n, x: 0, y: 0, vx: 0, vy: 0, w: 0, h: 0 }));
       const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
       const edges = G.edges;
+      window.__toolsview.nodes = nodes;
 
       function resize() {
         W = canvas.width = canvas.offsetWidth;

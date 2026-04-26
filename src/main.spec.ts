@@ -3,9 +3,20 @@ import os from 'os';
 import path from 'path';
 import { execSync } from 'child_process';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { main } from './main.js';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { createRequestHandler, main } from './main.js';
 
 vi.mock('child_process', () => ({ execSync: vi.fn() }));
+
+vi.mock('node:http', () => ({
+  default: {
+    createServer: () => ({
+      listen: (_port: number, cb: () => void) => {
+        cb();
+      },
+    }),
+  },
+}));
 
 describe('main', () => {
   let tmpDir: string;
@@ -251,6 +262,23 @@ describe('main', () => {
     expect(json.edges[0]).toMatchObject({ from: 'skill-a', to: 'agent-b', type: 'calls' });
   });
 
+  it('skips mermaid copy when source missing', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    makeSkill(skillsDir, 'my-skill', 'body');
+    const realExists = fs.existsSync;
+    const existsSpy = vi
+      .spyOn(fs, 'existsSync')
+      .mockImplementation((p: fs.PathLike) =>
+        String(p).endsWith('mermaid.min.js') ? false : realExists(p),
+      );
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    expect(fs.existsSync(path.join(graphDir, 'mermaid.min.js'))).toBe(false);
+    existsSpy.mockRestore();
+  });
+
   it('writes agents count to stderr', () => {
     const agentsDir = path.join(tmpDir, '.claude', 'agents');
     makeAgent(agentsDir, 'my-agent', 'body');
@@ -258,5 +286,87 @@ describe('main', () => {
     main();
 
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('Agents: 1'));
+  });
+});
+
+describe('createRequestHandler', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'toolsview-handler-'));
+    fs.writeFileSync(path.join(tmpDir, 'graph.html'), '<html></html>');
+    fs.writeFileSync(path.join(tmpDir, 'graph.json'), '{}');
+    fs.writeFileSync(path.join(tmpDir, 'mermaid.min.js'), '// js');
+    fs.writeFileSync(path.join(tmpDir, 'styles.css'), 'body{}');
+    fs.writeFileSync(path.join(tmpDir, 'no-ext'), 'raw');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  function makeRes() {
+    const headers: Record<string, string | undefined> = {};
+    let status = 0;
+    let body: Buffer | string | undefined;
+    const res = {
+      writeHead(s: number, h?: Record<string, string>) {
+        status = s;
+        if (h) Object.assign(headers, h);
+      },
+      end(b?: Buffer | string) {
+        body = b;
+      },
+    } as unknown as ServerResponse;
+    return { res, get: () => ({ status, headers, body }) };
+  }
+
+  function call(url: string | undefined) {
+    const handler = createRequestHandler(tmpDir);
+    const { res, get } = makeRes();
+    handler({ url } as IncomingMessage, res);
+    return get();
+  }
+
+  it('serves graph.html with text/html for / request', () => {
+    const r = call('/');
+    expect(r.status).toBe(200);
+    expect(r.headers['Content-Type']).toBe('text/html; charset=utf-8');
+  });
+
+  it('serves graph.html when url undefined', () => {
+    const r = call(undefined);
+    expect(r.status).toBe(200);
+  });
+
+  it('serves graph.json with application/json', () => {
+    const r = call('/graph.json');
+    expect(r.headers['Content-Type']).toBe('application/json; charset=utf-8');
+  });
+
+  it('serves .js with text/javascript', () => {
+    const r = call('/mermaid.min.js');
+    expect(r.headers['Content-Type']).toBe('text/javascript; charset=utf-8');
+  });
+
+  it('serves .css with text/css', () => {
+    const r = call('/styles.css');
+    expect(r.headers['Content-Type']).toBe('text/css; charset=utf-8');
+  });
+
+  it('falls back to octet-stream for unknown extension', () => {
+    const r = call('/no-ext');
+    expect(r.headers['Content-Type']).toBe('application/octet-stream');
+  });
+
+  it('returns 404 for missing file', () => {
+    const r = call('/missing.html');
+    expect(r.status).toBe(404);
+    expect(r.body).toBe('Not found');
+  });
+
+  it('strips leading ../ to keep traversal inside outDir', () => {
+    const r = call('/../../graph.html');
+    expect(r.status).toBe(200);
   });
 });

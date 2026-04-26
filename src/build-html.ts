@@ -2,5 +2,6 @@ import templateHtml from './template.html?raw';
 import type { Graph } from './graph.js';
 
 export function buildHtml(graph: Graph): string {
-  return templateHtml.replace('__GRAPH_DATA__', JSON.stringify(graph));
+  const safeJson = JSON.stringify(graph).replace(/<\//g, '<\\/');
+  return templateHtml.replace('__GRAPH_DATA__', safeJson);
 }
