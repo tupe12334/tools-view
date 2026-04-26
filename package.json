@@ -1,15 +1,25 @@
 {
   "name": "toolsview",
   "version": "1.0.0",
-  "description": "Analyze Claude skill relationships and emit a graph JSON",
+  "description": "Analyze Claude skill relationships and emit a graph JSON + HTML viewer",
   "type": "module",
   "bin": {
-    "toolsview": "./src/index.js"
+    "toolsview": "./dist/index.js"
   },
+  "main": "./dist/index.js",
   "files": [
-    "src/"
+    "dist/"
   ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
   }
 }

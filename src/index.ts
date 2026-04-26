@@ -1,11 +1,42 @@
-#!/usr/bin/env node
-
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-// Walk up from dir until .claude/skills found
-function findSkillsDir(startDir) {
+type EdgeType = 'prerequisite' | 'calls' | 'suggests' | 'references';
+
+interface SkillNode {
+  id: string;
+  name: string;
+  description: string;
+  allowedTools: string[];
+}
+
+interface SkillEdge {
+  from: string;
+  to: string;
+  type: EdgeType;
+}
+
+interface Graph {
+  generated: string;
+  skillsDir: string;
+  nodes: SkillNode[];
+  edges: SkillEdge[];
+}
+
+interface ParsedFrontmatter {
+  meta: Record<string, string>;
+  body: string;
+}
+
+const TYPE_PRIORITY: Record<EdgeType, number> = {
+  prerequisite: 3,
+  calls: 2,
+  suggests: 1,
+  references: 0,
+};
+
+function findSkillsDir(startDir: string): string | null {
   let dir = startDir;
   while (true) {
     const candidate = path.join(dir, '.claude', 'skills');
@@ -18,11 +49,11 @@ function findSkillsDir(startDir) {
   }
 }
 
-function parseFrontmatter(content) {
+function parseFrontmatter(content: string): ParsedFrontmatter {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
   if (!match) return { meta: {}, body: content };
 
-  const meta = {};
+  const meta: Record<string, string> = {};
   for (const line of match[1].split(/\r?\n/)) {
     const colon = line.indexOf(':');
     if (colon === -1) continue;
@@ -34,13 +65,12 @@ function parseFrontmatter(content) {
   return { meta, body: content.slice(match[0].length) };
 }
 
-const TYPE_PRIORITY = { prerequisite: 3, calls: 2, suggests: 1, references: 0 };
-
-function classifyRef(contextBefore) {
+function classifyRef(contextBefore: string): EdgeType {
   const c = contextBefore.toLowerCase();
+
   if (
     c.includes('prerequisite') ||
-    c.includes('run') && c.includes('before') ||
+    (c.includes('run') && c.includes('before')) ||
     c.includes('require') ||
     c.includes('must have') ||
     c.includes('ensure') ||
@@ -53,7 +83,7 @@ function classifyRef(contextBefore) {
     c.includes('calls') ||
     c.includes('using') ||
     c.includes('invokes') ||
-    c.includes('step') && c.includes('run')
+    (c.includes('step') && c.includes('run'))
   ) return 'calls';
 
   if (
@@ -61,20 +91,20 @@ function classifyRef(contextBefore) {
     c.includes('next step') ||
     c.includes('next:') ||
     c.includes('then run') ||
-    c.includes('guide') && c.includes('run')
+    (c.includes('guide') && c.includes('run'))
   ) return 'suggests';
 
   return 'references';
 }
 
-function extractEdges(fromId, body, allSkillIds) {
-  const best = new Map();
+function extractEdges(fromId: string, body: string, allSkillIds: string[]): SkillEdge[] {
+  const best = new Map<string, { type: EdgeType; priority: number }>();
 
   for (const targetId of allSkillIds) {
     if (targetId === fromId) continue;
 
     const pattern = new RegExp(`/${targetId}(?=[^a-z0-9-]|$)`, 'gi');
-    let m;
+    let m: RegExpExecArray | null;
     while ((m = pattern.exec(body)) !== null) {
       const before = body.slice(Math.max(0, m.index - 120), m.index);
       const type = classifyRef(before);
@@ -86,14 +116,10 @@ function extractEdges(fromId, body, allSkillIds) {
     }
   }
 
-  return [...best.entries()].map(([to, { type }]) => ({
-    from: fromId,
-    to,
-    type,
-  }));
+  return [...best.entries()].map(([to, { type }]) => ({ from: fromId, to, type }));
 }
 
-function buildHtml(graph) {
+function buildHtml(graph: Graph): string {
   const data = JSON.stringify(graph);
   return `<!DOCTYPE html>
 <html lang="en">
@@ -141,17 +167,11 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const tip = document.getElementById('tip');
 
-// layout state
 let W, H;
 let pan = {x:0, y:0}, scale = 1;
 let drag = null, panDrag = null;
 
-// node physics state
-const nodes = G.nodes.map((n, i) => ({
-  ...n,
-  x: 0, y: 0, vx: 0, vy: 0,
-  w: 0, h: 0,  // computed label size
-}));
+const nodes = G.nodes.map(n => ({ ...n, x: 0, y: 0, vx: 0, vy: 0, w: 0, h: 0 }));
 const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
 const edges = G.edges;
 
@@ -161,7 +181,6 @@ function resize() {
 }
 
 function initPositions() {
-  // place on circle
   nodes.forEach((n, i) => {
     const a = (2 * Math.PI * i) / nodes.length;
     const r = Math.min(W, H) * 0.32;
@@ -170,7 +189,6 @@ function initPositions() {
   });
 }
 
-// measure label sizes
 function measureNodes() {
   ctx.font = 'bold 12px system-ui';
   nodes.forEach(n => {
@@ -179,11 +197,9 @@ function measureNodes() {
   });
 }
 
-// force simulation
 function tick() {
   const k = 200, repulsion = 8000, damping = 0.82, dt = 0.6;
 
-  // repulsion between all node pairs
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i+1; j < nodes.length; j++) {
       const a = nodes[i], b = nodes[j];
@@ -196,7 +212,6 @@ function tick() {
     }
   }
 
-  // spring attraction along edges
   edges.forEach(e => {
     const a = nodeById[e.from], b = nodeById[e.to];
     if (!a || !b) return;
@@ -208,22 +223,16 @@ function tick() {
     b.vx -= fx; b.vy -= fy;
   });
 
-  // center gravity
   nodes.forEach(n => {
     n.vx += (W/2 - n.x) * 0.002;
     n.vy += (H/2 - n.y) * 0.002;
   });
 
-  // integrate
   nodes.forEach(n => {
     if (n === drag) return;
     n.vx *= damping; n.vy *= damping;
     n.x += n.vx * dt; n.y += n.vy * dt;
   });
-}
-
-function worldToScreen(x, y) {
-  return { x: x * scale + pan.x, y: y * scale + pan.y };
 }
 
 function screenToWorld(x, y) {
@@ -237,7 +246,6 @@ function drawArrow(x1, y1, x2, y2, color, dashed) {
   ctx.lineWidth = dashed ? 1 : 1.5;
   if (dashed) ctx.setLineDash([4, 4]);
 
-  // shorten to node edge
   const dx = x2 - x1, dy = y2 - y1;
   const len = Math.sqrt(dx*dx + dy*dy) || 1;
   const ux = dx/len, uy = dy/len;
@@ -250,7 +258,6 @@ function drawArrow(x1, y1, x2, y2, color, dashed) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // arrowhead
   const hw = 6, hl = 10;
   const px = -uy, py = ux;
   ctx.beginPath();
@@ -264,19 +271,15 @@ function drawArrow(x1, y1, x2, y2, color, dashed) {
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
-
   ctx.save();
   ctx.translate(pan.x, pan.y);
   ctx.scale(scale, scale);
 
-  // edges
   edges.forEach(e => {
     const a = nodeById[e.from], b = nodeById[e.to];
     if (!a || !b) return;
     const color = COLORS[e.type] || COLORS.references;
     drawArrow(a.x, a.y, b.x, b.y, color, e.type === 'references');
-
-    // edge label midpoint
     const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
     ctx.font = '10px system-ui';
     ctx.fillStyle = color;
@@ -287,10 +290,8 @@ function draw() {
     ctx.globalAlpha = 1;
   });
 
-  // nodes
   nodes.forEach(n => {
     const hw = n.w/2, hh = n.h/2;
-    // box
     ctx.beginPath();
     ctx.roundRect(n.x - hw, n.y - hh, n.w, n.h, 6);
     ctx.fillStyle = n === drag ? '#2d3458' : '#1e2235';
@@ -298,7 +299,6 @@ function draw() {
     ctx.strokeStyle = n === drag ? '#a5b4fc' : '#4f5d8a';
     ctx.lineWidth = n === drag ? 2 : 1.5;
     ctx.stroke();
-    // label
     ctx.font = 'bold 12px system-ui';
     ctx.fillStyle = '#e2e8f0';
     ctx.textAlign = 'center';
@@ -309,78 +309,61 @@ function draw() {
   ctx.restore();
 }
 
-let animFrame;
 let ticks = 0;
 function loop() {
   if (ticks < 300) { tick(); ticks++; }
   draw();
-  animFrame = requestAnimationFrame(loop);
+  requestAnimationFrame(loop);
 }
 
-// hit test in world coords
 function hitNode(wx, wy) {
   return nodes.find(n => Math.abs(wx - n.x) < n.w/2 && Math.abs(wy - n.y) < n.h/2);
 }
 
-// pointer events
 canvas.addEventListener('mousedown', e => {
   const {x, y} = screenToWorld(e.offsetX, e.offsetY);
   const n = hitNode(x, y);
-  if (n) {
-    drag = n;
-    canvas.classList.add('grabbing');
-  } else {
-    panDrag = {sx: e.offsetX - pan.x, sy: e.offsetY - pan.y};
-    canvas.classList.add('grabbing');
-  }
+  if (n) { drag = n; canvas.classList.add('grabbing'); }
+  else { panDrag = {sx: e.offsetX - pan.x, sy: e.offsetY - pan.y}; canvas.classList.add('grabbing'); }
 });
 
 canvas.addEventListener('mousemove', e => {
   if (drag) {
     const {x, y} = screenToWorld(e.offsetX, e.offsetY);
-    drag.x = x; drag.y = y;
-    drag.vx = 0; drag.vy = 0;
-    ticks = 0;
-    tip.style.display = 'none';
-    return;
+    drag.x = x; drag.y = y; drag.vx = 0; drag.vy = 0;
+    ticks = 0; tip.style.display = 'none'; return;
   }
   if (panDrag) {
     pan.x = e.offsetX - panDrag.sx;
     pan.y = e.offsetY - panDrag.sy;
     return;
   }
-  // hover tooltip
   const {x, y} = screenToWorld(e.offsetX, e.offsetY);
   const n = hitNode(x, y);
   if (n) {
-    const desc = n.description.length > 160 ? n.description.slice(0,157)+'…' : n.description;
+    const desc = n.description.length > 160 ? n.description.slice(0,157)+'\\u2026' : n.description;
     const tools = n.allowedTools.length ? '<div class="t">Tools: ' + n.allowedTools.join(', ') + '</div>' : '';
     tip.innerHTML = '<b>' + n.name + '</b><div>' + desc + '</div>' + tools;
     tip.style.display = 'block';
     const pad = 12, tw = tip.offsetWidth || 280;
     tip.style.left = (e.clientX + pad + tw > window.innerWidth ? e.clientX - tw - pad : e.clientX + pad) + 'px';
     tip.style.top  = (e.clientY + pad) + 'px';
-  } else {
-    tip.style.display = 'none';
-  }
+  } else { tip.style.display = 'none'; }
 });
 
 window.addEventListener('mouseup', () => {
-  drag = null; panDrag = null;
-  canvas.classList.remove('grabbing');
+  drag = null; panDrag = null; canvas.classList.remove('grabbing');
 });
 
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
   const factor = e.deltaY < 0 ? 1.1 : 0.9;
-  const wx = e.offsetX, wy = e.offsetY;
-  pan.x = wx - (wx - pan.x) * factor;
-  pan.y = wy - (wy - pan.y) * factor;
+  pan.x = e.offsetX - (e.offsetX - pan.x) * factor;
+  pan.y = e.offsetY - (e.offsetY - pan.y) * factor;
   scale *= factor;
 }, {passive: false});
 
-// init
-window.addEventListener('resize', () => { resize(); });
+window.addEventListener('resize', resize);
 resize();
 measureNodes();
 initPositions();
@@ -390,29 +373,29 @@ loop();
 </html>`;
 }
 
-function openBrowser(filePath) {
-  const platform = process.platform;
-  const cmd = platform === 'darwin' ? `open "${filePath}"`
-    : platform === 'win32' ? `start "" "${filePath}"`
-    : `xdg-open "${filePath}"`;
+function openBrowser(filePath: string): void {
+  const cmds: Record<string, string> = {
+    darwin: `open "${filePath}"`,
+    win32:  `start "" "${filePath}"`,
+  };
+  const cmd = cmds[process.platform] ?? `xdg-open "${filePath}"`;
   try { execSync(cmd); } catch { /* ignore */ }
 }
 
-function main() {
+function main(): void {
   const skillsDir = findSkillsDir(process.cwd());
   if (!skillsDir) {
-    process.stderr.write('Error: no .claude/skills/ directory found (searched from ' + process.cwd() + ')\n');
+    process.stderr.write(`Error: no .claude/skills/ directory found (searched from ${process.cwd()})\n`);
     process.exit(1);
   }
 
-  const entries = fs.readdirSync(skillsDir);
-  const skillIds = entries.filter(e =>
+  const skillIds = fs.readdirSync(skillsDir).filter(e =>
     fs.statSync(path.join(skillsDir, e)).isDirectory() &&
     fs.existsSync(path.join(skillsDir, e, 'SKILL.md'))
   );
 
   if (skillIds.length === 0) {
-    process.stderr.write('Error: no skills found in ' + skillsDir + '\n');
+    process.stderr.write(`Error: no skills found in ${skillsDir}\n`);
     process.exit(1);
   }
 
@@ -421,8 +404,8 @@ function main() {
     const { meta, body } = parseFrontmatter(raw);
     return {
       id,
-      name: meta.name || id,
-      description: meta.description || '',
+      name: meta['name'] ?? id,
+      description: meta['description'] ?? '',
       allowedTools: meta['allowed-tools']
         ? meta['allowed-tools'].split(',').map(t => t.trim()).filter(Boolean)
         : [],
@@ -430,15 +413,15 @@ function main() {
     };
   });
 
-  const nodes = skills.map(({ id, name, description, allowedTools }) => ({
+  const nodes: SkillNode[] = skills.map(({ id, name, description, allowedTools }) => ({
     id, name, description, allowedTools,
   }));
 
-  const edges = skills.flatMap(skill =>
+  const edges: SkillEdge[] = skills.flatMap(skill =>
     extractEdges(skill.id, skill.body, skillIds)
   );
 
-  const graph = {
+  const graph: Graph = {
     generated: new Date().toISOString(),
     skillsDir: path.relative(process.cwd(), skillsDir),
     nodes,
@@ -447,18 +430,14 @@ function main() {
 
   const claudeDir = path.dirname(skillsDir);
   const outDir = path.join(claudeDir, 'graph');
-  if (!fs.existsSync(outDir)) {
-    fs.mkdirSync(outDir, { recursive: true });
-  }
+  fs.mkdirSync(outDir, { recursive: true });
 
   const gitignorePath = path.join(outDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     fs.writeFileSync(gitignorePath, 'graph.json\ngraph.html\n');
   } else {
     const gi = fs.readFileSync(gitignorePath, 'utf-8');
-    if (!gi.includes('graph.html')) {
-      fs.appendFileSync(gitignorePath, 'graph.html\n');
-    }
+    if (!gi.includes('graph.html')) fs.appendFileSync(gitignorePath, 'graph.html\n');
   }
 
   const jsonPath = path.join(outDir, 'graph.json');
