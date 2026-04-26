@@ -199,12 +199,25 @@
     <script>
       const G = __GRAPH_DATA__;
 
+      function escapeHtml(text) {
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function sanitizeMermaid(code) {
+        return code.replace(/[<>]/g, (match) => (match === '<' ? '&lt;' : '&gt;'));
+      }
+
       function extractMermaidBlocks(body) {
         const blocks = [];
         const regex = /```mermaid\n([\s\S]*?)\n```/g;
         let match;
         while ((match = regex.exec(body)) !== null) {
-          blocks.push(match[1]);
+          blocks.push(sanitizeMermaid(match[1]));
         }
         return blocks;
       }
@@ -243,12 +256,14 @@
         const title = document.getElementById('modal-title');
         const body = document.getElementById('modal-body');
         title.textContent = node.name;
-        body.innerHTML = mermaidBlocks
+        const html = mermaidBlocks
           .map((block, i) => {
             const highlighted = highlightSkillNodes(block);
-            return `<div class="mermaid" id="mermaid-${i}">${highlighted}</div>`;
+            const escaped = highlighted.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            return '<div class="mermaid" id="mermaid-' + i + '">' + escaped + '</div>';
           })
           .join('<hr style="margin:20px 0;border:1px solid #3b4168;">');
+        body.innerHTML = html;
         modal.classList.add('open');
         if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
           mermaid.contentLoaded();
@@ -508,10 +523,10 @@
           const desc =
             n.description.length > 160 ? n.description.slice(0, 157) + '…' : n.description;
           const tools = n.allowedTools.length
-            ? '<div class="t">Tools: ' + n.allowedTools.join(', ') + '</div>'
+            ? '<div class="t">Tools: ' + escapeHtml(n.allowedTools.join(', ')) + '</div>'
             : '';
-          const typeLabel = '<div class="t">' + n.type + '</div>';
-          tip.innerHTML = '<b>' + n.name + '</b>' + typeLabel + '<div>' + desc + '</div>' + tools;
+          const typeLabel = '<div class="t">' + escapeHtml(n.type) + '</div>';
+          tip.innerHTML = '<b>' + escapeHtml(n.name) + '</b>' + typeLabel + '<div>' + escapeHtml(desc) + '</div>' + tools;
           tip.style.display = 'block';
           const pad = 12,
             tw = tip.offsetWidth || 280;
