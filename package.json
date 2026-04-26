@@ -1,6 +1,6 @@
 {
   "name": "toolsview",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Analyze Claude skill relationships and emit a graph JSON + HTML viewer",
   "type": "module",
   "bin": {
@@ -23,6 +23,10 @@
     "prepare": "husky"
   },
   "packageManager": "pnpm@10.33.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tupe12334/tools-view"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18"
