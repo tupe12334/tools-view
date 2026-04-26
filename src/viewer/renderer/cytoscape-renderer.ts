@@ -36,10 +36,17 @@ export class CytoscapeRenderer implements GraphRenderer {
 
   mount(container: HTMLElement, graph: Graph, theme: RendererTheme, layout: LayoutOpts): void {
     ensureRegistered();
+    const measureCanvas = document.createElement('canvas');
+    const measureCtx = measureCanvas.getContext('2d');
+    if (measureCtx) measureCtx.font = 'bold 12px system-ui, sans-serif';
+    const widthOf = (label: string): number => {
+      const textW = measureCtx ? measureCtx.measureText(label).width : label.length * 7;
+      return Math.ceil(textW + 24);
+    };
     const elements = [
       ...graph.nodes.map((n) => ({
         group: 'nodes' as const,
-        data: { id: n.id, name: n.name, type: n.type, ref: n },
+        data: { id: n.id, name: n.name, type: n.type, w: widthOf(n.name), ref: n },
       })),
       ...graph.edges.map((e, i) => ({
         group: 'edges' as const,
