@@ -64,4 +64,36 @@ describe('extractEdges', () => {
     const edges = extractEdges('a', 'see /b and /c here', ['a', 'b', 'c']);
     expect(edges).toHaveLength(2);
   });
+
+  it('extracts calls edge from Skill() syntax', () => {
+    const edges = extractEdges('a', 'Skill(skill="b", args="X Y")', ['a', 'b']);
+    expect(edges).toHaveLength(1);
+    expect(edges[0]).toMatchObject({ from: 'a', to: 'b', type: 'calls' });
+  });
+
+  it('Skill() syntax skips self-reference', () => {
+    expect(extractEdges('a', 'Skill(skill="a")', ['a'])).toHaveLength(0);
+  });
+
+  it('Skill() syntax ignores unknown skill ids', () => {
+    expect(extractEdges('a', 'Skill(skill="unknown")', ['a', 'b'])).toHaveLength(0);
+  });
+
+  it('Skill() syntax does not upgrade prerequisite edge to calls', () => {
+    const body = 'prerequisite: /b ... Skill(skill="b")';
+    const edges = extractEdges('a', body, ['a', 'b']);
+    expect(edges).toHaveLength(1);
+    expect(edges[0].type).toBe('prerequisite');
+  });
+
+  it('Skill() syntax upgrades references edge to calls', () => {
+    const body = 'see /b ... Skill(skill="b")';
+    const edges = extractEdges('a', body, ['a', 'b']);
+    expect(edges[0].type).toBe('calls');
+  });
+
+  it('Skill() syntax is case-insensitive for the keyword', () => {
+    const edges = extractEdges('a', 'skill(skill="b")', ['a', 'b']);
+    expect(edges[0].type).toBe('calls');
+  });
 });

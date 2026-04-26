@@ -23,5 +23,19 @@ export function extractEdges(fromId: string, body: string, allSkillIds: string[]
     }
   }
 
+  const skillCallPattern = /Skill\(\s*skill\s*=\s*"([^"]+)"/gi;
+  let sm = skillCallPattern.exec(body);
+  while (sm !== null) {
+    const targetId = sm[1];
+    if (targetId !== fromId && allSkillIds.includes(targetId)) {
+      const priority = TYPE_PRIORITY.calls;
+      const existing = best.get(targetId);
+      if (existing === undefined || priority > existing.priority) {
+        best.set(targetId, { type: 'calls', priority });
+      }
+    }
+    sm = skillCallPattern.exec(body);
+  }
+
   return [...best.entries()].map(([to, { type }]) => ({ from: fromId, to, type }));
 }
