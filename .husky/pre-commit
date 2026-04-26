@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+echo "▶ pre-commit: spell check"
+pnpm spell || exit 1
+
 echo "▶ pre-commit: typecheck"
 pnpm tsc --noEmit || exit 1
 
