@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildHtml } from './build-html.js';
 
 describe('buildHtml', () => {
-  it('replaces __GRAPH_DATA__ with JSON', () => {
+  it('replaces graph data placeholder with JSON', () => {
     const graph = {
       generated: '2024-01-01T00:00:00.000Z',
       skillsDir: 'skills',
@@ -12,7 +12,7 @@ describe('buildHtml', () => {
     };
     const html = buildHtml(graph);
     expect(html).toContain(JSON.stringify(graph));
-    expect(html).not.toContain('__GRAPH_DATA__');
+    expect(html).not.toContain('__GRAPH_DATA_PLACEHOLDER__');
   });
 
   it('escapes </ in node body to prevent script tag breakout', () => {

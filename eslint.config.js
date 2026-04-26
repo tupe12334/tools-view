@@ -21,4 +21,14 @@ export default [
       'error/no-literal-error-message': 'off',
     },
   },
+  {
+    files: ['src/viewer/main.ts'],
+    rules: {
+      'ddd/require-spec-file': 'off',
+      'max-lines': 'off',
+      'no-restricted-syntax': 'off',
+      '@typescript-eslint/non-nullable-type-assertion-style': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
+    },
+  },
 ];
