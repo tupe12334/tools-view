@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-26
+
+### Added
+- Detect skill calls inside `Agent()` prompt args
+- Support top-level `skills/` directory with nested category subdirectories
+- Display mermaid diagrams from skill bodies on node click
+- Highlight skill references inside mermaid diagrams
+- Serve graph over localhost with proper MIME types and e2e tests
+- `test:e2e:headed` script
+- Playwright MCP with isolation
+
+### Changed
+- Open graph as `file://` URL instead of localhost server
+- Load mermaid from CDN instead of bundling
+- Pre-commit hook now runs lint
+
+### Fixed
+- Click detection for mermaid modal and mermaid.js initialization
+
 ## [1.2.0] - 2026-04-26
 
 ### Added
