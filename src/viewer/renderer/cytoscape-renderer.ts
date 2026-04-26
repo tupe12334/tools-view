@@ -32,6 +32,7 @@ export class CytoscapeRenderer implements GraphRenderer {
   private clickHandler: ((e: NodeEvent) => void) | null = null;
   private hoverHandler: ((e: NodeEvent) => void) | null = null;
   private blurHandler: (() => void) | null = null;
+  private bgClickHandler: (() => void) | null = null;
   private dragMoved = false;
   private basePositions = new Map<string, { x: number; y: number }>();
   private lastSpacingFactor = 1;
@@ -86,7 +87,11 @@ export class CytoscapeRenderer implements GraphRenderer {
         node,
         clientX: orig?.clientX ?? 0,
         clientY: orig?.clientY ?? 0,
+        shiftKey: Boolean(orig?.shiftKey),
       });
+    });
+    cy.on('tap', (evt: EventObject) => {
+      if (evt.target === cy) this.bgClickHandler?.();
     });
     cy.on('mouseover', 'node', (evt: EventObject) => {
       if (!this.hoverHandler) return;
@@ -96,6 +101,7 @@ export class CytoscapeRenderer implements GraphRenderer {
         node,
         clientX: orig?.clientX ?? 0,
         clientY: orig?.clientY ?? 0,
+        shiftKey: Boolean(orig?.shiftKey),
       });
     });
     cy.on('mouseout', 'node', () => {
@@ -178,6 +184,26 @@ export class CytoscapeRenderer implements GraphRenderer {
 
   onNodeBlur(handler: () => void): void {
     this.blurHandler = handler;
+  }
+
+  onBackgroundClick(handler: () => void): void {
+    this.bgClickHandler = handler;
+  }
+
+  isolate(nodeId: string): void {
+    if (!this.cy) return;
+    const cy = this.cy;
+    const target = cy.getElementById(nodeId);
+    if (target.empty()) return;
+    const keep = target.closedNeighborhood();
+    cy.batch(() => {
+      cy.elements().difference(keep).addClass('faded');
+      keep.removeClass('faded');
+    });
+  }
+
+  clearIsolate(): void {
+    this.cy?.elements().removeClass('faded');
   }
 
   fit(): void {

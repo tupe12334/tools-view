@@ -17,6 +17,7 @@ declare global {
       G: Graph;
       renderer: GraphRenderer;
       clickNode: (id: string) => void;
+      isolateNode: (id: string) => void;
     };
   }
 }
@@ -92,8 +93,29 @@ spacingEl.addEventListener('input', (e) => {
   }, 150);
 });
 
-renderer.onNodeClick(({ node }: NodeEvent) => {
-  openMermaidLive(node);
+let isolatedId: string | null = null;
+function toggleIsolate(id: string): void {
+  if (isolatedId === id) {
+    renderer.clearIsolate();
+    isolatedId = null;
+    return;
+  }
+  renderer.isolate(id);
+  isolatedId = id;
+}
+
+renderer.onNodeClick(({ node, shiftKey }: NodeEvent) => {
+  if (shiftKey) {
+    openMermaidLive(node);
+    return;
+  }
+  toggleIsolate(node.id);
+});
+
+renderer.onBackgroundClick(() => {
+  if (isolatedId === null) return;
+  renderer.clearIsolate();
+  isolatedId = null;
 });
 
 function showTip(node: SkillNode, clientX: number, clientY: number): void {
@@ -129,5 +151,8 @@ window.__toolsview = {
   clickNode: (id: string) => {
     const node = nodeById.get(id);
     if (node) openMermaidLive(node);
+  },
+  isolateNode: (id: string) => {
+    toggleIsolate(id);
   },
 };

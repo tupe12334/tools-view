@@ -9,6 +9,9 @@ export interface GraphRenderer {
   onNodeClick(handler: (e: NodeEvent) => void): void;
   onNodeHover(handler: (e: NodeEvent) => void): void;
   onNodeBlur(handler: () => void): void;
+  onBackgroundClick(handler: () => void): void;
+  isolate(nodeId: string): void;
+  clearIsolate(): void;
   fit(): void;
   destroy(): void;
 }

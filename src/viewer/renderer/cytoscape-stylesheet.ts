@@ -9,6 +9,13 @@ const EDGE_TYPES: EdgeType[] = ['prerequisite', 'calls', 'suggests', 'references
 function baseRules(): StyleRule[] {
   return [
     {
+      selector: '.faded',
+      style: {
+        opacity: 0.12,
+        'text-opacity': 0.12,
+      },
+    },
+    {
       selector: 'node',
       style: {
         label: 'data(name)',

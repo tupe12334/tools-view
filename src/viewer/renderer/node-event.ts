@@ -4,4 +4,5 @@ export interface NodeEvent {
   node: SkillNode;
   clientX: number;
   clientY: number;
+  shiftKey: boolean;
 }
