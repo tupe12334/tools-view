@@ -48,6 +48,41 @@ describe('findSkillsDir', () => {
     expect(findSkillsDir(tmpDir)).toBe(skillsDir);
   });
 
+  it('finds flat-layout repo where skills are top-level dirs', () => {
+    const a = path.join(tmpDir, 'browse');
+    const b = path.join(tmpDir, 'review');
+    fs.mkdirSync(a, { recursive: true });
+    fs.mkdirSync(b, { recursive: true });
+    fs.writeFileSync(path.join(a, 'SKILL.md'), '---\nname: browse\n---\nbody');
+    fs.writeFileSync(path.join(b, 'SKILL.md'), '---\nname: review\n---\nbody');
+    expect(findSkillsDir(tmpDir)).toBe(tmpDir);
+  });
+
+  it('skips hidden dirs and node_modules when counting flat-layout siblings', () => {
+    const a = path.join(tmpDir, 'browse');
+    const b = path.join(tmpDir, 'review');
+    const hidden = path.join(tmpDir, '.cache');
+    const nm = path.join(tmpDir, 'node_modules', 'pkg');
+    const file = path.join(tmpDir, 'README.md');
+    fs.mkdirSync(a);
+    fs.mkdirSync(b);
+    fs.mkdirSync(hidden);
+    fs.mkdirSync(nm, { recursive: true });
+    fs.writeFileSync(path.join(a, 'SKILL.md'), '---\nname: a\n---\n');
+    fs.writeFileSync(path.join(b, 'SKILL.md'), '---\nname: b\n---\n');
+    fs.writeFileSync(path.join(hidden, 'SKILL.md'), '---\nname: c\n---\n');
+    fs.writeFileSync(path.join(nm, 'SKILL.md'), '---\nname: d\n---\n');
+    fs.writeFileSync(file, 'readme');
+    expect(findSkillsDir(tmpDir)).toBe(tmpDir);
+  });
+
+  it('ignores single top-level dir with SKILL.md (not a flat-layout repo)', () => {
+    const a = path.join(tmpDir, 'one');
+    fs.mkdirSync(a, { recursive: true });
+    fs.writeFileSync(path.join(a, 'SKILL.md'), '---\nname: one\n---\nbody');
+    expect(findSkillsDir(tmpDir)).toBeNull();
+  });
+
   it('ignores top-level skills/ dir without any SKILL.md', () => {
     const skillsDir = path.join(tmpDir, 'skills');
     fs.mkdirSync(path.join(skillsDir, 'sub'), { recursive: true });

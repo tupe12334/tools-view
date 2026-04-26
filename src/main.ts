@@ -62,9 +62,11 @@ export function main(): void {
     nodes,
     edges,
   };
-  let claudeDir = skillsDir !== null ? path.dirname(skillsDir) : '';
+  const baseFor = (d: string): string =>
+    ['skills', 'agents'].includes(path.basename(d)) ? path.dirname(d) : d;
+  let claudeDir = skillsDir !== null ? baseFor(skillsDir) : '';
   if (agentsDir !== null && skillsDir === null) {
-    claudeDir = path.dirname(agentsDir);
+    claudeDir = baseFor(agentsDir);
   }
   const outDir = path.join(claudeDir, 'graph');
   fs.mkdirSync(outDir, { recursive: true });

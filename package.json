@@ -1,6 +1,6 @@
 {
   "name": "toolsview",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Analyze Claude skill relationships and emit a graph JSON + HTML viewer",
   "type": "module",
   "bin": {

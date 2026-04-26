@@ -68,6 +68,20 @@ describe('main', () => {
     fs.writeFileSync(path.join(agentsDir, `${id}.md`), content);
   }
 
+  it('writes graph inside repo root for flat-layout repos', () => {
+    fs.mkdirSync(path.join(tmpDir, 'one'));
+    fs.mkdirSync(path.join(tmpDir, 'two'));
+    fs.writeFileSync(path.join(tmpDir, 'one', 'SKILL.md'), '---\nname: one\n---\nbody');
+    fs.writeFileSync(path.join(tmpDir, 'two', 'SKILL.md'), '---\nname: two\n---\nbody');
+
+    main();
+
+    const graphDir = path.join(tmpDir, 'graph');
+    expect(fs.existsSync(path.join(graphDir, 'graph.json'))).toBe(true);
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.nodes.map((n: { id: string }) => n.id).sort()).toEqual(['one', 'two']);
+  });
+
   it('runs successfully with minimal skill (no frontmatter)', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     makeSkill(skillsDir, 'my-skill', 'Just a body with no frontmatter');

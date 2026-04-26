@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-26
+
+### Added
+- Support flat-layout skill repos (e.g. gstack) where each skill is a top-level directory containing `SKILL.md`; detected when a directory has 2+ immediate `<dir>/SKILL.md` siblings
+
+### Fixed
+- Graph output directory for non-`skills`/`agents` roots now writes inside the root (e.g. `<repo>/graph/`) instead of escaping to its parent
+
 ## [1.4.1] - 2026-04-26
 
 ### Changed
