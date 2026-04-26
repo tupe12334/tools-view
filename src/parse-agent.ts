@@ -14,6 +14,7 @@ export function parseAgent(agentsDir: string, file: string) {
     name: meta.name !== undefined ? meta.name : id,
     description: meta.description !== undefined ? meta.description : '',
     allowedTools,
+    filePath: path.join(agentsDir, file),
     body,
   };
 }

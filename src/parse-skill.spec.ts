@@ -27,6 +27,7 @@ describe('parseSkill', () => {
     expect(result.description).toBe('Desc');
     expect(result.allowedTools).toEqual(['Bash', 'Read']);
     expect(result.body).toBe('body');
+    expect(result.filePath).toBe(path.join(tmpDir, 'my-skill', 'SKILL.md'));
   });
 
   it('uses id as name and empty values when no frontmatter', () => {

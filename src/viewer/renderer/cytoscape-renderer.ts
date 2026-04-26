@@ -88,6 +88,7 @@ export class CytoscapeRenderer implements GraphRenderer {
         clientX: orig?.clientX ?? 0,
         clientY: orig?.clientY ?? 0,
         shiftKey: Boolean(orig?.shiftKey),
+        altKey: Boolean(orig?.altKey),
       });
     });
     cy.on('tap', (evt: EventObject) => {
@@ -102,6 +103,7 @@ export class CytoscapeRenderer implements GraphRenderer {
         clientX: orig?.clientX ?? 0,
         clientY: orig?.clientY ?? 0,
         shiftKey: Boolean(orig?.shiftKey),
+        altKey: Boolean(orig?.altKey),
       });
     });
     cy.on('mouseout', 'node', () => {

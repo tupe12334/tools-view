@@ -22,6 +22,12 @@ export default [
     },
   },
   {
+    files: ['src/viewer/github-ide-url.ts'],
+    rules: {
+      'default/no-hardcoded-urls': 'off',
+    },
+  },
+  {
     files: ['src/viewer/main.ts'],
     rules: {
       'ddd/require-spec-file': 'off',

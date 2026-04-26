@@ -5,4 +5,5 @@ export interface NodeEvent {
   clientX: number;
   clientY: number;
   shiftKey: boolean;
+  altKey: boolean;
 }

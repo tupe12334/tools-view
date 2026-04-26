@@ -290,5 +290,30 @@ describe('main', () => {
 
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('Agents: 1'));
   });
+
+  it('rewrites node filePath relative to git repo root when git is available', () => {
+    const skillsDir = path.join(tmpDir, '.claude', 'skills');
+    makeSkill(skillsDir, 'my-skill', '---\nname: My\n---\nbody');
+    mockedExecSync.mockImplementation((cmd: string) => {
+      if (cmd === 'git rev-parse --show-toplevel') return Buffer.from(tmpDir + '\n');
+      if (cmd === 'git remote get-url origin')
+        return Buffer.from('git@github.com:owner/repo.git\n');
+      if (cmd === 'git rev-parse --abbrev-ref HEAD') return Buffer.from('main\n');
+      return Buffer.from('');
+    });
+
+    main();
+
+    const graphDir = path.join(tmpDir, '.claude', 'graph');
+    const json = JSON.parse(fs.readFileSync(path.join(graphDir, 'graph.json'), 'utf-8'));
+    expect(json.git).toEqual({
+      repoRoot: tmpDir,
+      host: 'github',
+      owner: 'owner',
+      repo: 'repo',
+      branch: 'main',
+    });
+    expect(json.nodes[0].filePath).toBe('.claude/skills/my-skill/SKILL.md');
+  });
 });
 

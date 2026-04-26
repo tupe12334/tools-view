@@ -26,6 +26,7 @@ describe('parseAgent', () => {
     expect(result.description).toBe('Does stuff');
     expect(result.allowedTools).toEqual(['Bash', 'Read']);
     expect(result.body).toBe('body');
+    expect(result.filePath).toBe(path.join(tmpDir, 'my-agent.md'));
   });
 
   it('parses agent with comma-separated tools', () => {

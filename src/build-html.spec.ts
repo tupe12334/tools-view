@@ -7,6 +7,7 @@ describe('buildHtml', () => {
       generated: '2024-01-01T00:00:00.000Z',
       skillsDir: 'skills',
       agentsDir: null,
+      git: null,
       nodes: [],
       edges: [],
     };
@@ -20,6 +21,7 @@ describe('buildHtml', () => {
       generated: '',
       skillsDir: null,
       agentsDir: null,
+      git: null,
       nodes: [
         {
           id: 'a',
@@ -27,6 +29,7 @@ describe('buildHtml', () => {
           description: '',
           allowedTools: [],
           type: 'skill' as const,
+          filePath: 'a/SKILL.md',
           body: 'oops </script> should not break',
         },
       ],
@@ -43,6 +46,7 @@ describe('buildHtml', () => {
       generated: '',
       skillsDir: null,
       agentsDir: null,
+      git: null,
       nodes: [
         {
           id: 'a',
@@ -50,6 +54,7 @@ describe('buildHtml', () => {
           description: '',
           allowedTools: [],
           type: 'skill' as const,
+          filePath: 'a/SKILL.md',
           body,
         },
       ],
@@ -62,7 +67,14 @@ describe('buildHtml', () => {
   });
 
   it('returns string containing template content', () => {
-    const graph = { generated: '', skillsDir: null, agentsDir: null, nodes: [], edges: [] };
+    const graph = {
+      generated: '',
+      skillsDir: null,
+      agentsDir: null,
+      git: null,
+      nodes: [],
+      edges: [],
+    };
     const html = buildHtml(graph);
     expect(typeof html).toBe('string');
     expect(html.length).toBeGreaterThan(100);

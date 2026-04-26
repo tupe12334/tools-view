@@ -18,6 +18,7 @@ export function parseSkill(skillsDir: string, id: string) {
     name: meta.name !== undefined ? meta.name : id,
     description: meta.description !== undefined ? meta.description : '',
     allowedTools,
+    filePath: path.join(skillsDir, id, 'SKILL.md'),
     body,
   };
 }

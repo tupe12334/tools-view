@@ -4,6 +4,7 @@ import { extractMermaidBlocks } from './extract-mermaid-blocks.js';
 import { highlightSkillNodes } from './highlight-skill-nodes.js';
 import { mermaidLiveUrl } from './mermaid-live-url.js';
 import { autoSpacing } from './auto-spacing.js';
+import { githubIdeUrl } from './github-ide-url.js';
 import { CytoscapeRenderer } from './renderer/cytoscape-renderer.js';
 import type { GraphRenderer } from './renderer/graph-renderer.js';
 import type { LayoutOpts } from './renderer/layout-opts.js';
@@ -18,6 +19,7 @@ declare global {
       renderer: GraphRenderer;
       clickNode: (id: string) => void;
       isolateNode: (id: string) => void;
+      openFile: (id: string) => void;
     };
   }
 }
@@ -44,6 +46,14 @@ const theme: RendererTheme = {
     references: true,
   },
 };
+
+function openFile(node: SkillNode): void {
+  if (G.git && !node.filePath.startsWith('..')) {
+    window.open(githubIdeUrl(G.git, node.filePath), '_blank', 'noopener');
+    return;
+  }
+  alert('File: ' + node.filePath);
+}
 
 function openMermaidLive(node: SkillNode): void {
   if (!node.body) {
@@ -104,12 +114,16 @@ function toggleIsolate(id: string): void {
   isolatedId = id;
 }
 
-renderer.onNodeClick(({ node, shiftKey }: NodeEvent) => {
-  if (shiftKey) {
+renderer.onNodeClick(({ node, shiftKey, altKey }: NodeEvent) => {
+  if (altKey) {
     openMermaidLive(node);
     return;
   }
-  toggleIsolate(node.id);
+  if (shiftKey) {
+    toggleIsolate(node.id);
+    return;
+  }
+  openFile(node);
 });
 
 renderer.onBackgroundClick(() => {
@@ -154,5 +168,9 @@ window.__toolsview = {
   },
   isolateNode: (id: string) => {
     toggleIsolate(id);
+  },
+  openFile: (id: string) => {
+    const node = nodeById.get(id);
+    if (node) openFile(node);
   },
 };

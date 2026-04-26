@@ -8,6 +8,7 @@ import { extractEdges } from './extract-edges.js';
 import { findAgentsDir } from './find-agents-dir.js';
 import { findSkillIds } from './find-skill-ids.js';
 import { findSkillsDir } from './find-skills-dir.js';
+import { getGitInfo } from './git-info.js';
 import { openBrowser } from './open-browser.js';
 import { parseAgent } from './parse-agent.js';
 import { parseSkill } from './parse-skill.js';
@@ -55,10 +56,16 @@ export function main(): void {
   }
   const allIds = nodes.map((n) => n.id);
   const edges = [...bodyMap.entries()].flatMap(([id, body]) => extractEdges(id, body, allIds));
+  const git = getGitInfo(process.cwd());
+  const pathBase = git !== null ? git.repoRoot : process.cwd();
+  for (const node of nodes) {
+    node.filePath = path.relative(pathBase, node.filePath);
+  }
   const graph: Graph = {
     generated: new Date().toISOString(),
     skillsDir: skillsDir !== null ? path.relative(process.cwd(), skillsDir) : null,
     agentsDir: agentsDir !== null ? path.relative(process.cwd(), agentsDir) : null,
+    git,
     nodes,
     edges,
   };
