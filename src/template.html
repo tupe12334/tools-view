@@ -227,7 +227,11 @@
           .map((block, i) => `<div class="mermaid" id="mermaid-${i}">${block}</div>`)
           .join('<hr style="margin:20px 0;border:1px solid #3b4168;">');
         modal.classList.add('open');
-        mermaid.contentLoaded();
+        if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
+          mermaid.contentLoaded();
+        } else if (typeof mermaid !== 'undefined' && mermaid.run) {
+          setTimeout(() => mermaid.run(), 0);
+        }
       }
 
       const hasSkills = G.nodes.some((n) => n.type === 'skill');
@@ -451,7 +455,7 @@
         if (n) {
           drag = n;
           clickNode = n;
-          clickPos = { x: e.offsetX, y: e.offsetY };
+          clickPos = { x: e.clientX, y: e.clientY };
           canvas.classList.add('grabbing');
         } else {
           panDrag = { sx: e.offsetX - pan.x, sy: e.offsetY - pan.y };
@@ -541,6 +545,13 @@
       measureNodes();
       initPositions();
       loop();
+
+      // Initialize mermaid when loaded
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: true });
+      } else {
+        console.warn('Mermaid.js not loaded - diagrams may not render');
+      }
     </script>
   </body>
 </html>
