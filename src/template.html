@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <title>Graph</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
       * {
         box-sizing: border-box;
@@ -98,57 +97,6 @@
         margin-top: 5px;
         font-size: 11px;
       }
-      #modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 99;
-      }
-      #modal.open {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      #modal-content {
-        background: #1a1d27;
-        border: 1px solid #3b4168;
-        border-radius: 10px;
-        padding: 24px;
-        max-width: 90vw;
-        max-height: 90vh;
-        overflow: auto;
-        color: #e2e8f0;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      }
-      #modal-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: #a5b4fc;
-      }
-      #modal-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #3b4168;
-        border: none;
-        color: #e2e8f0;
-        cursor: pointer;
-        padding: 8px 12px;
-        border-radius: 5px;
-        font-size: 14px;
-      }
-      #modal-close:hover {
-        background: #4f5d8a;
-      }
-      .mermaid {
-        display: flex;
-        justify-content: center;
-      }
     </style>
   </head>
   <body>
@@ -189,13 +137,6 @@
     </div>
     <canvas id="c"></canvas>
     <div id="tip"></div>
-    <div id="modal">
-      <div id="modal-content">
-        <button id="modal-close">×</button>
-        <div id="modal-title"></div>
-        <div id="modal-body"></div>
-      </div>
-    </div>
     <script>
       const G = __GRAPH_DATA__;
       window.__toolsview = { G };
@@ -230,7 +171,24 @@
         return mermaidCode + styleBlock;
       }
 
-      function showMermaidModal(node) {
+      function toUrlSafeBase64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_');
+      }
+
+      function mermaidLiveUrl(code) {
+        const state = {
+          code,
+          mermaid: '{"theme":"default"}',
+          autoSync: true,
+          updateDiagram: true,
+        };
+        return 'https://mermaid.live/edit#base64:' + toUrlSafeBase64(JSON.stringify(state));
+      }
+
+      function openMermaidLive(node) {
         if (!node.body) {
           alert('No diagram found for this ' + node.type);
           return;
@@ -240,22 +198,9 @@
           alert('No mermaid diagrams found in ' + node.name);
           return;
         }
-        const modal = document.getElementById('modal');
-        const title = document.getElementById('modal-title');
-        const body = document.getElementById('modal-body');
-        title.textContent = node.name;
-        body.innerHTML = mermaidBlocks
-          .map((block, i) => {
-            const highlighted = highlightSkillNodes(block);
-            return `<div class="mermaid" id="mermaid-${i}">${highlighted}</div>`;
-          })
-          .join('<hr style="margin:20px 0;border:1px solid #3b4168;">');
-        modal.classList.add('open');
-        if (typeof mermaid !== 'undefined' && mermaid.contentLoaded) {
-          mermaid.contentLoaded();
-        } else if (typeof mermaid !== 'undefined' && mermaid.run) {
-          setTimeout(() => mermaid.run(), 0);
-        }
+        mermaidBlocks.forEach((block) => {
+          window.open(mermaidLiveUrl(highlightSkillNodes(block)), '_blank', 'noopener');
+        });
       }
 
       const hasSkills = G.nodes.some((n) => n.type === 'skill');
@@ -532,7 +477,7 @@
           const dy = e.clientY - clickPos.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 5) {
-            showMermaidModal(clickNode);
+            openMermaidLive(clickNode);
           }
         }
         drag = null;
@@ -554,29 +499,11 @@
         { passive: false },
       );
 
-      const modal = document.getElementById('modal');
-      const closeBtn = document.getElementById('modal-close');
-      closeBtn.addEventListener('click', () => {
-        modal.classList.remove('open');
-      });
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.remove('open');
-        }
-      });
-
       window.addEventListener('resize', resize);
       resize();
       measureNodes();
       initPositions();
       loop();
-
-      // Initialize mermaid when loaded
-      if (typeof mermaid !== 'undefined') {
-        mermaid.initialize({ startOnLoad: true });
-      } else {
-        console.warn('Mermaid.js not loaded - diagrams may not render');
-      }
     </script>
   </body>
 </html>

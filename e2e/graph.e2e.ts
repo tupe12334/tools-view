@@ -36,10 +36,8 @@ test.describe('toolsview graph viewer', () => {
     expect(ids).toContain('another-skill');
   });
 
-  test('opens mermaid modal on node click', async ({ page }) => {
+  test('opens mermaid.live in new tab on node click', async ({ page, context }) => {
     await page.goto('graph.html');
-    const modal = page.locator('#modal');
-    await expect(modal).toBeHidden();
 
     await page.waitForFunction(
       () => {
@@ -48,6 +46,8 @@ test.describe('toolsview graph viewer', () => {
         return Boolean(tv && tv.nodes && tv.nodes.length > 0);
       },
     );
+
+    const popupPromise = context.waitForEvent('page');
     await page.evaluate(() => {
       type N = { id: string; x: number; y: number };
       const tv = (window as unknown as { __toolsview: { nodes: N[] } }).__toolsview;
@@ -62,11 +62,15 @@ test.describe('toolsview graph viewer', () => {
       window.dispatchEvent(new MouseEvent('mouseup', opts));
     });
 
-    await expect(modal).toBeVisible();
-    await expect(page.locator('#modal-title')).toHaveText('Test Skill');
-    await expect(page.locator('#modal-body .mermaid')).toHaveCount(1);
-
-    await page.locator('#modal-close').click();
-    await expect(modal).toBeHidden();
+    const popup = await popupPromise;
+    const url = popup.url();
+    expect(url).toContain('mermaid.live/edit#base64:');
+    const encoded = url.split('#base64:')[1];
+    const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = Buffer.from(b64, 'base64').toString('utf-8');
+    const state: { code: string } = JSON.parse(decoded);
+    expect(typeof state.code).toBe('string');
+    expect(state.code.length).toBeGreaterThan(0);
+    await popup.close();
   });
 });
