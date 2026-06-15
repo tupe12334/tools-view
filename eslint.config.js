@@ -10,6 +10,9 @@ export default [
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      // Method shorthand signatures are type-checked bivariantly (unsafe);
+      // property-style function signatures are checked contravariantly (safe).
+      '@typescript-eslint/method-signature-style': ['error', 'property'],
     },
   },
   {
