@@ -34,7 +34,7 @@ export class CytoscapeRenderer implements GraphRenderer {
   private blurHandler: (() => void) | null = null;
   private bgClickHandler: (() => void) | null = null;
   private dragMoved = false;
-  private basePositions = new Map<string, { x: number; y: number }>();
+  private readonly basePositions = new Map<string, { x: number; y: number }>();
   private lastSpacingFactor = 1;
   private currentLayoutKind: 'force' | 'hierarchical' = 'force';
 

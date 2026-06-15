@@ -10,6 +10,9 @@ export default [
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      // Flag private class members that are never reassigned so they are
+      // declared `readonly`, signalling intent and preventing accidental mutation.
+      '@typescript-eslint/prefer-readonly': 'error',
     },
   },
   {
