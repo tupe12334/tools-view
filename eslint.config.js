@@ -6,6 +6,7 @@ export default [
   {
     files: ['src/**/*.ts'],
     rules: {
+      eqeqeq: ['error', 'always'],
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
