@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { parseFrontmatter } from './parse-frontmatter.js';
+import type { ParsedSkill } from './parsed-skill.js';
 
-export function parseSkill(skillsDir: string, id: string) {
+export function parseSkill(skillsDir: string, id: string): ParsedSkill {
   const raw = fs.readFileSync(path.join(skillsDir, id, 'SKILL.md'), 'utf-8');
   const { meta, body } = parseFrontmatter(raw);
   const allowedToolsRaw = meta['allowed-tools'];
