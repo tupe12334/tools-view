@@ -7,6 +7,11 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Promises that are created but never awaited, returned, or explicitly
+      // marked with `void` are silently dropped: rejections become unhandled
+      // and execution order is non-deterministic. Require every promise to be
+      // handled so async bugs surface at lint time instead of at runtime.
+      '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
