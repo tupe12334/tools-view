@@ -7,6 +7,10 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
