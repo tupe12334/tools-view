@@ -162,14 +162,14 @@ window.addEventListener('resize', () => {
 window.__toolsview = {
   G,
   renderer,
-  clickNode: (id: string) => {
+  clickNode: (id: string): void => {
     const node = nodeById.get(id);
     if (node) openMermaidLive(node);
   },
-  isolateNode: (id: string) => {
+  isolateNode: (id: string): void => {
     toggleIsolate(id);
   },
-  openFile: (id: string) => {
+  openFile: (id: string): void => {
     const node = nodeById.get(id);
     if (node) openFile(node);
   },
