@@ -7,6 +7,10 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
       // Array.prototype.sort() without a compare function sorts elements as
       // strings, so [10, 9, 1].sort() yields [1, 10, 9]. Require an explicit
       // comparator for non-string arrays to prevent silent ordering bugs.
