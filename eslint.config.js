@@ -14,6 +14,9 @@ export default [
       // Method shorthand signatures are type-checked bivariantly (unsafe);
       // property-style function signatures are checked contravariantly (safe).
       '@typescript-eslint/method-signature-style': ['error', 'property'],
+      // Require explicit return/argument types on exported (public API)
+      // functions so module boundaries are self-documenting and stable.
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
     },
   },
   {
