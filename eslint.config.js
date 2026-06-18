@@ -36,6 +36,12 @@ export default [
       // unnecessary runtime imports, and prevents accidental import cycles
       // through the barrel file.
       '@typescript-eslint/consistent-type-exports': 'error',
+      // Disallow non-boolean values (nullable strings/numbers, `any`, etc.) in
+      // boolean positions. `if (str)` silently treats both `undefined` and the
+      // empty string as "missing", hiding the distinction; this rule forces the
+      // nullish/empty cases to be handled explicitly so conditionals say what
+      // they mean and edge cases can't slip through.
+      '@typescript-eslint/strict-boolean-expressions': 'error',
     },
   },
   {
