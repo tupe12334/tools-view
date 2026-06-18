@@ -7,6 +7,11 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Prefer optional chaining (`a?.b`) over manual `&&` nullish-guard chains
+      // (`a && a.b`). Optional chaining is shorter, evaluates the base once with
+      // well-defined short-circuit semantics, and is less error-prone than
+      // repeating the base expression across a long `&&` chain. Auto-fixable.
+      '@typescript-eslint/prefer-optional-chain': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
