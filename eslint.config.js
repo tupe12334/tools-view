@@ -6,6 +6,7 @@ export default [
   {
     files: ['src/**/*.ts'],
     rules: {
+      eqeqeq: ['error', 'always'],
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
@@ -13,6 +14,9 @@ export default [
       // Flag private class members that are never reassigned so they are
       // declared `readonly`, signalling intent and preventing accidental mutation.
       '@typescript-eslint/prefer-readonly': 'error',
+      // Method shorthand signatures are type-checked bivariantly (unsafe);
+      // property-style function signatures are checked contravariantly (safe).
+      '@typescript-eslint/method-signature-style': ['error', 'property'],
     },
   },
   {
