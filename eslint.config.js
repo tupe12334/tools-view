@@ -11,13 +11,26 @@ export default [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
       ],
+      // Array.prototype.sort() without a compare function sorts elements as
+      // strings, so [10, 9, 1].sort() yields [1, 10, 9]. Require an explicit
+      // comparator for non-string arrays to prevent silent ordering bugs.
+      '@typescript-eslint/require-array-sort-compare': [
+        'error',
+        { ignoreStringArrays: true },
+      ],
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      // Flag private class members that are never reassigned so they are
+      // declared `readonly`, signalling intent and preventing accidental mutation.
+      '@typescript-eslint/prefer-readonly': 'error',
       // Method shorthand signatures are type-checked bivariantly (unsafe);
       // property-style function signatures are checked contravariantly (safe).
       '@typescript-eslint/method-signature-style': ['error', 'property'],
+      // Require explicit return/argument types on exported (public API)
+      // functions so module boundaries are self-documenting and stable.
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
     },
   },
   {
