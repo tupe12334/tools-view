@@ -27,6 +27,11 @@ export default [
       // Require explicit return/argument types on exported (public API)
       // functions so module boundaries are self-documenting and stable.
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      // Force `export type` for declarations that only re-export types. This
+      // lets bundlers/transpilers erase type-only exports, avoids emitting
+      // unnecessary runtime imports, and prevents accidental import cycles
+      // through the barrel file.
+      '@typescript-eslint/consistent-type-exports': 'error',
     },
   },
   {
