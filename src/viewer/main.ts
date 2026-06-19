@@ -56,7 +56,7 @@ function openFile(node: SkillNode): void {
 }
 
 function openMermaidLive(node: SkillNode): void {
-  if (!node.body) {
+  if (node.body === undefined || node.body === '') {
     alert('No diagram found for this ' + node.type);
     return;
   }

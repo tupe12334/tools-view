@@ -25,7 +25,7 @@ function updateGitignore(gitignorePath: string): void {
 export function main(): void {
   const skillsDir = findSkillsDir(process.cwd());
   const agentsDir = findAgentsDir(process.cwd());
-  if (!skillsDir && !agentsDir) {
+  if (skillsDir === null && agentsDir === null) {
     process.stderr.write(
       `Error: no .claude/skills/ or .claude/agents/ directory found (searched from ${process.cwd()})\n`,
     );
