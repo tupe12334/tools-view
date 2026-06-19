@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Stricter lint baseline: enabled `eqeqeq`, `@typescript-eslint/consistent-type-imports`, `@typescript-eslint/consistent-type-exports`, `@typescript-eslint/explicit-module-boundary-types`, `@typescript-eslint/prefer-readonly`, `@typescript-eslint/method-signature-style`, and `@typescript-eslint/require-array-sort-compare`
+
+## [1.9.0] - 2026-04-26
+
+### Added
+- Click a node to open its source file in the github.dev IDE (opens the repo's file directly in the browser-based editor)
+
+## [1.8.0] - 2026-04-26
+
+### Added
+- Click a node to isolate it together with its neighborhood, hiding unrelated nodes/edges to focus on a single skill or agent's connections
+
+## [1.7.2] - 2026-04-26
+
+### Fixed
+- Spacing slider now visibly changes layout density; dragging it re-runs the cytoscape layout instead of leaving node positions unchanged
+
+### Removed
+- Debug screenshots accidentally committed to the repository
+
+## [1.7.1] - 2026-04-26
+
+### Fixed
+- Precompute each node's label width before layout to avoid cytoscape's visibility cache poisoning, which intermittently rendered nodes as hidden/zero-size
+
+## [1.7.0] - 2026-04-26
+
+### Changed
+- Replace the custom force-directed layout with cytoscape.js behind a `GraphRenderer` interface, decoupling the viewer from a specific layout engine
+
 ## [1.6.0] - 2026-04-26
 
 ### Added
