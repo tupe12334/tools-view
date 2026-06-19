@@ -7,6 +7,11 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // String concatenation with `+` silently coerces non-string operands
+      // (numbers, objects) via toString and is harder to read than an
+      // interpolated template. Require template literals so string building is
+      // explicit and coercion surprises can't slip in.
+      'prefer-template': 'error',
       // A condition whose type makes it always truthy or always falsy is dead
       // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
       // redundant `?.`/`&&` guard the types already rule out. Flag these so

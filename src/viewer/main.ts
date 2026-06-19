@@ -52,17 +52,17 @@ function openFile(node: SkillNode): void {
     window.open(githubIdeUrl(G.git, node.filePath), '_blank', 'noopener');
     return;
   }
-  alert('File: ' + node.filePath);
+  alert(`File: ${node.filePath}`);
 }
 
 function openMermaidLive(node: SkillNode): void {
   if (node.body === undefined || node.body === '') {
-    alert('No diagram found for this ' + node.type);
+    alert(`No diagram found for this ${node.type}`);
     return;
   }
   const blocks = extractMermaidBlocks(node.body);
   if (blocks.length === 0) {
-    alert('No mermaid diagrams found in ' + node.name);
+    alert(`No mermaid diagrams found in ${node.name}`);
     return;
   }
   blocks.forEach((block) => {
@@ -133,18 +133,19 @@ renderer.onBackgroundClick(() => {
 });
 
 function showTip(node: SkillNode, clientX: number, clientY: number): void {
-  const desc = node.description.length > 160 ? node.description.slice(0, 157) + '…' : node.description;
+  const desc =
+    node.description.length > 160 ? `${node.description.slice(0, 157)}…` : node.description;
   const tools = node.allowedTools.length
-    ? '<div class="t">Tools: ' + node.allowedTools.join(', ') + '</div>'
+    ? `<div class="t">Tools: ${node.allowedTools.join(', ')}</div>`
     : '';
-  const typeLabel = '<div class="t">' + node.type + '</div>';
-  tip.innerHTML = '<b>' + node.name + '</b>' + typeLabel + '<div>' + desc + '</div>' + tools;
+  const typeLabel = `<div class="t">${node.type}</div>`;
+  tip.innerHTML = `<b>${node.name}</b>${typeLabel}<div>${desc}</div>${tools}`;
   tip.style.display = 'block';
   const pad = 12;
   const tw = tip.offsetWidth || 280;
-  tip.style.left =
-    (clientX + pad + tw > window.innerWidth ? clientX - tw - pad : clientX + pad) + 'px';
-  tip.style.top = clientY + pad + 'px';
+  const left = clientX + pad + tw > window.innerWidth ? clientX - tw - pad : clientX + pad;
+  tip.style.left = `${String(left)}px`;
+  tip.style.top = `${String(clientY + pad)}px`;
 }
 
 renderer.onNodeHover(({ node, clientX, clientY }: NodeEvent) => {
