@@ -7,6 +7,13 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Array methods like map/filter/reduce/every/some/sort expect their
+      // callback to return a value; forgetting the `return` silently yields
+      // `undefined` for every element, producing arrays full of holes or
+      // predicates that are always falsy. Require a return in these callbacks
+      // (and forbid one in `forEach`, where a returned value is meaningless) so
+      // these silent transform bugs surface at lint time.
+      'array-callback-return': ['error', { checkForEach: true }],
       // A condition whose type makes it always truthy or always falsy is dead
       // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
       // redundant `?.`/`&&` guard the types already rule out. Flag these so
