@@ -42,6 +42,13 @@ export default [
       // Require explicit return/argument types on exported (public API)
       // functions so module boundaries are self-documenting and stable.
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      // Require an explicit return type on every function, not just the
+      // exported ones. Relying on inference means a refactor deep inside a
+      // helper can silently widen or change its return type and the mistake
+      // only surfaces far away at the call site (or not at all). Writing the
+      // type down turns the function's own body into the thing that gets
+      // type-checked against the contract, and documents intent for readers.
+      '@typescript-eslint/explicit-function-return-type': 'error',
       // Force `export type` for declarations that only re-export types. This
       // lets bundlers/transpilers erase type-only exports, avoids emitting
       // unnecessary runtime imports, and prevents accidental import cycles
