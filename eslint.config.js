@@ -34,6 +34,12 @@ export default [
         'error',
         { ignoreStringArrays: true },
       ],
+      // Require every `switch` over a union or enum type to handle all of its
+      // members. When a discriminated union (e.g. EdgeType, NodeType) later
+      // gains a new variant, any switch that forgot to handle it fails at lint
+      // time instead of silently falling through to the wrong branch at
+      // runtime. A forward guard for correctness as the type model evolves.
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
