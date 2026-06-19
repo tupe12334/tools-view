@@ -7,6 +7,12 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Require shorthand for object properties and methods: `{ x }` instead of
+      // `{ x: x }` and `{ f() {} }` instead of `{ f: function () {} }`. Shorthand
+      // is less noisy, makes a property/value mismatch (`{ id: idd }` typo)
+      // visually obvious, and keeps object literals consistent across the
+      // codebase. Auto-fixable, so it carries no ongoing authoring cost.
+      'object-shorthand': ['error', 'always'],
       // Require any function that returns a Promise to be declared `async`. A
       // plain function that returns a promise can still throw *synchronously*
       // before the promise is created, so a caller's `.catch()`/`await` never
