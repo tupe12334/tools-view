@@ -7,6 +7,14 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Require any function that returns a Promise to be declared `async`. A
+      // plain function that returns a promise can still throw *synchronously*
+      // before the promise is created, so a caller's `.catch()`/`await` never
+      // sees that error — it escapes as a sync throw instead of a rejection.
+      // Marking the function `async` guarantees every error path surfaces as a
+      // rejection and gives the whole function one consistent contract. This
+      // complements `no-floating-promises` (already enabled) for async hygiene.
+      '@typescript-eslint/promise-function-async': 'error',
       // Prefer optional chaining (`a?.b`) over manual `&&` nullish-guard chains
       // (`a && a.b`). Optional chaining is shorter, evaluates the base once with
       // well-defined short-circuit semantics, and is less error-prone than
