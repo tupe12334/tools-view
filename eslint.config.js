@@ -7,6 +7,12 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // A condition whose type makes it always truthy or always falsy is dead
+      // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
+      // redundant `?.`/`&&` guard the types already rule out. Flag these so
+      // stale null-checks and unreachable branches surface at lint time instead
+      // of masking a logic error.
+      '@typescript-eslint/no-unnecessary-condition': 'error',
       // Promises that are created but never awaited, returned, or explicitly
       // marked with `void` are silently dropped: rejections become unhandled
       // and execution order is non-deterministic. Require every promise to be
