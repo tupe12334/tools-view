@@ -12,6 +12,17 @@ export default [
       // well-defined short-circuit semantics, and is less error-prone than
       // repeating the base expression across a long `&&` chain. Auto-fixable.
       '@typescript-eslint/prefer-optional-chain': 'error',
+      // A condition whose type makes it always truthy or always falsy is dead
+      // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
+      // redundant `?.`/`&&` guard the types already rule out. Flag these so
+      // stale null-checks and unreachable branches surface at lint time instead
+      // of masking a logic error.
+      '@typescript-eslint/no-unnecessary-condition': 'error',
+      // Promises that are created but never awaited, returned, or explicitly
+      // marked with `void` are silently dropped: rejections become unhandled
+      // and execution order is non-deterministic. Require every promise to be
+      // handled so async bugs surface at lint time instead of at runtime.
+      '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
@@ -41,6 +52,12 @@ export default [
       // unnecessary runtime imports, and prevents accidental import cycles
       // through the barrel file.
       '@typescript-eslint/consistent-type-exports': 'error',
+      // Disallow non-boolean values (nullable strings/numbers, `any`, etc.) in
+      // boolean positions. `if (str)` silently treats both `undefined` and the
+      // empty string as "missing", hiding the distinction; this rule forces the
+      // nullish/empty cases to be handled explicitly so conditionals say what
+      // they mean and edge cases can't slip through.
+      '@typescript-eslint/strict-boolean-expressions': 'error',
     },
   },
   {
