@@ -7,6 +7,11 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Prefer optional chaining (`a?.b`) over manual `&&` nullish-guard chains
+      // (`a && a.b`). Optional chaining is shorter, evaluates the base once with
+      // well-defined short-circuit semantics, and is less error-prone than
+      // repeating the base expression across a long `&&` chain. Auto-fixable.
+      '@typescript-eslint/prefer-optional-chain': 'error',
       // A condition whose type makes it always truthy or always falsy is dead
       // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
       // redundant `?.`/`&&` guard the types already rule out. Flag these so
