@@ -65,6 +65,16 @@ export default [
       // nullish/empty cases to be handled explicitly so conditionals say what
       // they mean and edge cases can't slip through.
       '@typescript-eslint/strict-boolean-expressions': 'error',
+      // Enforce `value as Type` over angle-bracket `<Type>value` (the latter is
+      // ambiguous with JSX/generics) and forbid asserting object literals
+      // (`{ ... } as Type`). An object-literal assertion silently suppresses
+      // excess-property checking, so a typo'd or stray field passes type-checking
+      // unnoticed; `satisfies Type` (or an explicitly typed variable) keeps the
+      // full check. Narrowing assertions on existing values stay allowed.
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        { assertionStyle: 'as', objectLiteralTypeAssertions: 'never' },
+      ],
     },
   },
   {
