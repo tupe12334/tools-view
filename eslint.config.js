@@ -12,6 +12,19 @@ export default [
       // interpolated template. Require template literals so string building is
       // explicit and coercion surprises can't slip in.
       'prefer-template': 'error',
+      // Require any function that returns a Promise to be declared `async`. A
+      // plain function that returns a promise can still throw *synchronously*
+      // before the promise is created, so a caller's `.catch()`/`await` never
+      // sees that error — it escapes as a sync throw instead of a rejection.
+      // Marking the function `async` guarantees every error path surfaces as a
+      // rejection and gives the whole function one consistent contract. This
+      // complements `no-floating-promises` (already enabled) for async hygiene.
+      '@typescript-eslint/promise-function-async': 'error',
+      // Prefer optional chaining (`a?.b`) over manual `&&` nullish-guard chains
+      // (`a && a.b`). Optional chaining is shorter, evaluates the base once with
+      // well-defined short-circuit semantics, and is less error-prone than
+      // repeating the base expression across a long `&&` chain. Auto-fixable.
+      '@typescript-eslint/prefer-optional-chain': 'error',
       // A condition whose type makes it always truthy or always falsy is dead
       // code or a bug: e.g. testing a non-nullable value for `undefined`, or a
       // redundant `?.`/`&&` guard the types already rule out. Flag these so
@@ -34,6 +47,12 @@ export default [
         'error',
         { ignoreStringArrays: true },
       ],
+      // Require every `switch` over a union or enum type to handle all of its
+      // members. When a discriminated union (e.g. EdgeType, NodeType) later
+      // gains a new variant, any switch that forgot to handle it fails at lint
+      // time instead of silently falling through to the wrong branch at
+      // runtime. A forward guard for correctness as the type model evolves.
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',
       'security/detect-object-injection': 'off',
@@ -47,6 +66,13 @@ export default [
       // Require explicit return/argument types on exported (public API)
       // functions so module boundaries are self-documenting and stable.
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      // Require an explicit return type on every function, not just the
+      // exported ones. Relying on inference means a refactor deep inside a
+      // helper can silently widen or change its return type and the mistake
+      // only surfaces far away at the call site (or not at all). Writing the
+      // type down turns the function's own body into the thing that gets
+      // type-checked against the contract, and documents intent for readers.
+      '@typescript-eslint/explicit-function-return-type': 'error',
       // Force `export type` for declarations that only re-export types. This
       // lets bundlers/transpilers erase type-only exports, avoids emitting
       // unnecessary runtime imports, and prevents accidental import cycles
@@ -58,6 +84,16 @@ export default [
       // nullish/empty cases to be handled explicitly so conditionals say what
       // they mean and edge cases can't slip through.
       '@typescript-eslint/strict-boolean-expressions': 'error',
+      // Enforce `value as Type` over angle-bracket `<Type>value` (the latter is
+      // ambiguous with JSX/generics) and forbid asserting object literals
+      // (`{ ... } as Type`). An object-literal assertion silently suppresses
+      // excess-property checking, so a typo'd or stray field passes type-checking
+      // unnoticed; `satisfies Type` (or an explicitly typed variable) keeps the
+      // full check. Narrowing assertions on existing values stay allowed.
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        { assertionStyle: 'as', objectLiteralTypeAssertions: 'never' },
+      ],
     },
   },
   {

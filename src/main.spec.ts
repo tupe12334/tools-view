@@ -65,13 +65,13 @@ describe('main', () => {
     }).toThrow('exit:1');
   });
 
-  function makeSkill(skillsDir: string, id: string, content: string) {
+  function makeSkill(skillsDir: string, id: string, content: string): void {
     const dir = path.join(skillsDir, id);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'SKILL.md'), content);
   }
 
-  function makeAgent(agentsDir: string, id: string, content: string) {
+  function makeAgent(agentsDir: string, id: string, content: string): void {
     fs.mkdirSync(agentsDir, { recursive: true });
     fs.writeFileSync(path.join(agentsDir, `${id}.md`), content);
   }
