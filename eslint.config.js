@@ -7,6 +7,15 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // The non-null assertion operator (`value!`) tells the compiler to trust
+      // a value is non-null/undefined with no runtime check, silently disabling
+      // null-safety. A wrong assumption crashes far from the assertion with a
+      // `Cannot read properties of undefined` error instead of failing where the
+      // bad assumption was made. Forbid it so the missing case must be narrowed
+      // (`if (x != null)`), defaulted (`x ?? fallback`), or thrown on explicitly
+      // — all of which fail loudly and locally. typescript-eslint leaves this out
+      // of `strictTypeChecked`, so it must be enabled per-repo.
+      '@typescript-eslint/no-non-null-assertion': 'error',
       // Array methods like map/filter/reduce/every/some/sort expect their
       // callback to return a value; forgetting the `return` silently yields
       // `undefined` for every element, producing arrays full of holes or
