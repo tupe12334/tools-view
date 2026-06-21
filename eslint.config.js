@@ -7,6 +7,16 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Require a `return` value in the callbacks of array methods that expect
+      // one (`map`, `filter`, `reduce`, `every`, `some`, `find`, `sort`,
+      // `flatMap`, …) and, with `checkForEach`, forbid returning a value from
+      // `forEach` where it is meaningless. Forgetting the `return` is a silent
+      // logic bug — the method runs but yields `undefined` per element, so a
+      // `map` produces holes, a `filter` predicate never matches, a reducer
+      // drops its accumulator. This repo builds its graph through many
+      // map/filter/reduce/sort transforms, exactly the code where the rule
+      // pays off. Codebase is clean today, so this is a zero-violation guard.
+      'array-callback-return': ['error', { checkForEach: true }],
       // String concatenation with `+` silently coerces non-string operands
       // (numbers, objects) via toString and is harder to read than an
       // interpolated template. Require template literals so string building is
