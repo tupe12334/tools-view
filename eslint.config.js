@@ -20,6 +20,11 @@ export default [
       // assertions today, so the rule has zero current cost and guards against
       // the pattern creeping in as the codebase grows.
       '@typescript-eslint/no-non-null-assertion': 'error',
+      // String concatenation with `+` silently coerces non-string operands
+      // (numbers, objects) via toString and is harder to read than an
+      // interpolated template. Require template literals so string building is
+      // explicit and coercion surprises can't slip in.
+      'prefer-template': 'error',
       // Require shorthand for object properties and methods: `{ x }` instead of
       // `{ x: x }` and `{ f() {} }` instead of `{ f: function () {} }`. Shorthand
       // is less noisy, makes a property/value mismatch (`{ id: idd }` typo)
