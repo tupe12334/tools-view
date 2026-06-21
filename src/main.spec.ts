@@ -32,14 +32,18 @@ describe('main', () => {
   });
 
   it('exits with 1 when neither skills nor agents dir found', () => {
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no .claude/skills/'));
   });
 
   it('exits with 1 when skills dir has no skills and no agents dir', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     fs.mkdirSync(skillsDir, { recursive: true });
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no skills or agents found'));
   });
 
@@ -47,14 +51,18 @@ describe('main', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     fs.mkdirSync(skillsDir, { recursive: true });
     fs.writeFileSync(path.join(skillsDir, 'SKILL.md'), '');
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
   });
 
   it('ignores dirs without SKILL.md', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     const skillDir = path.join(skillsDir, 'my-skill');
     fs.mkdirSync(skillDir, { recursive: true });
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
   });
 
   function makeSkill(skillsDir: string, id: string, content: string): void {
@@ -216,7 +224,9 @@ describe('main', () => {
   it('exits with 1 when agents dir is empty', () => {
     const agentsDir = path.join(tmpDir, '.claude', 'agents');
     fs.mkdirSync(agentsDir, { recursive: true });
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining('no skills or agents found'));
   });
 
@@ -224,14 +234,18 @@ describe('main', () => {
     const agentsDir = path.join(tmpDir, '.claude', 'agents');
     fs.mkdirSync(agentsDir, { recursive: true });
     fs.writeFileSync(path.join(agentsDir, 'README.txt'), 'ignored');
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
   });
 
   it('ignores dirs in agents dir', () => {
     const agentsDir = path.join(tmpDir, '.claude', 'agents');
     const subdir = path.join(agentsDir, 'subdir.md');
     fs.mkdirSync(subdir, { recursive: true });
-    expect(() => { main(); }).toThrow('exit:1');
+    expect(() => {
+      main();
+    }).toThrow('exit:1');
   });
 
   it('runs successfully with both skills and agents', () => {
@@ -295,7 +309,7 @@ describe('main', () => {
     const skillsDir = path.join(tmpDir, '.claude', 'skills');
     makeSkill(skillsDir, 'my-skill', '---\nname: My\n---\nbody');
     mockedExecSync.mockImplementation((cmd: string) => {
-      if (cmd === 'git rev-parse --show-toplevel') return Buffer.from(tmpDir + '\n');
+      if (cmd === 'git rev-parse --show-toplevel') return Buffer.from(`${tmpDir}\n`);
       if (cmd === 'git remote get-url origin')
         return Buffer.from('git@github.com:owner/repo.git\n');
       if (cmd === 'git rev-parse --abbrev-ref HEAD') return Buffer.from('main\n');
@@ -316,4 +330,3 @@ describe('main', () => {
     expect(json.nodes[0].filePath).toBe('.claude/skills/my-skill/SKILL.md');
   });
 });
-

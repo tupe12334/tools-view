@@ -79,7 +79,7 @@ export function main(): void {
   fs.mkdirSync(outDir, { recursive: true });
   updateGitignore(path.join(outDir, '.gitignore'));
   const jsonPath = path.join(outDir, 'graph.json');
-  fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2) + '\n');
+  fs.writeFileSync(jsonPath, `${JSON.stringify(graph, null, 2)}\n`);
   const htmlPath = path.join(outDir, 'graph.html');
   fs.writeFileSync(htmlPath, buildHtml(graph));
 

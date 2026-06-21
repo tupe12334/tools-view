@@ -14,6 +14,11 @@ export default [
       // (and forbid one in `forEach`, where a returned value is meaningless) so
       // these silent transform bugs surface at lint time.
       'array-callback-return': ['error', { checkForEach: true }],
+      // String concatenation with `+` silently coerces non-string operands
+      // (numbers, objects) via toString and is harder to read than an
+      // interpolated template. Require template literals so string building is
+      // explicit and coercion surprises can't slip in.
+      'prefer-template': 'error',
       // Require shorthand for object properties and methods: `{ x }` instead of
       // `{ x: x }` and `{ f() {} }` instead of `{ f: function () {} }`. Shorthand
       // is less noisy, makes a property/value mismatch (`{ id: idd }` typo)

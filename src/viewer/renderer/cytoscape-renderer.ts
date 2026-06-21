@@ -55,7 +55,7 @@ export class CytoscapeRenderer implements GraphRenderer {
       ...graph.edges.map((e, i) => ({
         group: 'edges' as const,
         data: {
-          id: 'e' + String(i),
+          id: `e${String(i)}`,
           source: e.from,
           target: e.to,
           type: e.type,
