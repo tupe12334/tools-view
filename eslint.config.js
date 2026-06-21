@@ -7,6 +7,19 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // Ban the non-null assertion operator (`value!`). The `!` tells the
+      // compiler to trust that a value is non-null without any runtime check,
+      // silently disabling the type system's null-safety. If the value is in
+      // fact `null`/`undefined` at runtime, the program crashes far from the
+      // assertion with a "Cannot read properties of undefined" error instead of
+      // failing where the wrong assumption was made. Forcing explicit narrowing
+      // (`if (x != null)`), a default (`x ?? fallback`), or an honest throw
+      // keeps null-safety verifiable by the compiler. typescript-eslint leaves
+      // this out of its `strictTypeChecked` preset (which eslint-config-agent
+      // extends), so it must be enabled per-repo. `src` has no non-null
+      // assertions today, so the rule has zero current cost and guards against
+      // the pattern creeping in as the codebase grows.
+      '@typescript-eslint/no-non-null-assertion': 'error',
       // String concatenation with `+` silently coerces non-string operands
       // (numbers, objects) via toString and is harder to read than an
       // interpolated template. Require template literals so string building is
