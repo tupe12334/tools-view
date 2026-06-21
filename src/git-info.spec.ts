@@ -15,7 +15,7 @@ function mockResponses(map: Record<string, string | Error>): void {
       if (v instanceof Error) throw v;
       return Buffer.from(v);
     }
-    throw new Error('unmocked: ' + cmd);
+    throw new Error(`unmocked: ${cmd}`);
   });
 }
 

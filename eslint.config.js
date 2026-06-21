@@ -7,6 +7,11 @@ export default [
     files: ['src/**/*.ts'],
     rules: {
       eqeqeq: ['error', 'always'],
+      // String concatenation with `+` silently coerces non-string operands
+      // (numbers, objects) via toString and is harder to read than an
+      // interpolated template. Require template literals so string building is
+      // explicit and coercion surprises can't slip in.
+      'prefer-template': 'error',
       // Require shorthand for object properties and methods: `{ x }` instead of
       // `{ x: x }` and `{ f() {} }` instead of `{ f: function () {} }`. Shorthand
       // is less noisy, makes a property/value mismatch (`{ id: idd }` typo)
