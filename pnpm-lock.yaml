@@ -27,6 +27,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.1.5
         version: 4.1.5(vitest@4.1.5)
+      block-no-verify:
+        specifier: ^1.3.0
+        version: 1.3.0
       cspell:
         specifier: ^10.0.0
         version: 10.0.0
@@ -745,6 +748,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  '@polyhook/sdk@0.1.11':
+    resolution: {integrity: sha512-Tb8NJ6oYxEwWAlsC0R/PFDIxMjYyXsZQOwSjoMD0eEPppyf1BtNfcZO1oSXxM2eQsEynlpOXr6cDku9B7KUSSQ==}
+    engines: {node: '>=18'}
+
   '@rollup/rollup-android-arm-eabi@4.60.2':
     resolution: {integrity: sha512-dnlp69efPPg6Uaw2dVqzWRfAWRnYVb1XJ8CyyhIbZeaq4CA5/mLeZ1IEt9QqQxmbdvagjLIm2ZL8BxXv5lH4Yw==}
     cpu: [arm]
@@ -1286,6 +1293,11 @@ packages:
   better-opn@3.0.2:
     resolution: {integrity: sha512-aVNobHnJqLiUelTaHat9DZ1qM2w0C0Eym4LPI/3JxOnSokGVdsl1T1kN7TFvsEAD8G47A6VKQ0TVHqbBnYMJlQ==}
     engines: {node: '>=12.0.0'}
+
+  block-no-verify@1.3.0:
+    resolution: {integrity: sha512-pUEt/KwRe2Uu5abvSZwaA8J6FCcNqjy+IebPW6DAgag81NmqUnCxd63ueivAa8L3f1bYL0dMXJ9WgJ2uyg1ZvA==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
 
   brace-expansion@1.1.14:
     resolution: {integrity: sha512-MWPGfDxnyzKU7rNOW9SP/c50vi3xrmrua/+6hfPbCS2ABNWfx24vPidzvC7krjU/RTo235sV776ymlsMtGKj8g==}
@@ -3406,6 +3418,8 @@ snapshots:
     dependencies:
       playwright: 1.59.1
 
+  '@polyhook/sdk@0.1.11': {}
+
   '@rollup/rollup-android-arm-eabi@4.60.2':
     optional: true
 
@@ -3938,6 +3952,10 @@ snapshots:
   better-opn@3.0.2:
     dependencies:
       open: 8.4.2
+
+  block-no-verify@1.3.0:
+    dependencies:
+      '@polyhook/sdk': 0.1.11
 
   brace-expansion@1.1.14:
     dependencies:
