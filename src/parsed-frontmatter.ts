@@ -1,4 +1,4 @@
 export interface ParsedFrontmatter {
-  meta: Partial<Record<string, string>>;
+  meta: Record<string, unknown>;
   body: string;
 }

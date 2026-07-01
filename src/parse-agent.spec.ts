@@ -35,6 +35,12 @@ describe('parseAgent', () => {
     expect(result.allowedTools).toEqual(['Bash', 'Read']);
   });
 
+  it('parses agent with block-sequence tools list', () => {
+    fs.writeFileSync(path.join(tmpDir, 'agent.md'), '---\ntools:\n  - Bash\n  - Read\n---\nbody');
+    const result = parseAgent(tmpDir, 'agent.md');
+    expect(result.allowedTools).toEqual(['Bash', 'Read']);
+  });
+
   it('uses id as name and empty values when no frontmatter', () => {
     fs.writeFileSync(path.join(tmpDir, 'my-agent.md'), 'just body');
     const result = parseAgent(tmpDir, 'my-agent.md');
