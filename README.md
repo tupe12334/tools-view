@@ -58,3 +58,7 @@ and the context around the mention determines the edge type.
 ```
 
 Edge classification is based on the 120 characters before each `/skill-name` mention — words like `prerequisite`, `require`, `run before`, `calls`, `invokes`, `suggest`, `next step` steer the type.
+
+## Related projects
+
+- [moadim](https://moadim.io/) — loop engineering: build, schedule & run agent loops.
