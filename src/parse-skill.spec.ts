@@ -30,6 +30,17 @@ describe('parseSkill', () => {
     expect(result.filePath).toBe(path.join(tmpDir, 'my-skill', 'SKILL.md'));
   });
 
+  it('parses skill with block-sequence allowed-tools list', () => {
+    const skillDir = path.join(tmpDir, 'my-skill');
+    fs.mkdirSync(skillDir);
+    fs.writeFileSync(
+      path.join(skillDir, 'SKILL.md'),
+      '---\nname: Test\nallowed-tools:\n  - Bash\n  - Read\n---\nbody',
+    );
+    const result = parseSkill(tmpDir, 'my-skill');
+    expect(result.allowedTools).toEqual(['Bash', 'Read']);
+  });
+
   it('uses id as name and empty values when no frontmatter', () => {
     const skillDir = path.join(tmpDir, 'my-skill');
     fs.mkdirSync(skillDir);

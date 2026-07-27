@@ -14,16 +14,6 @@ describe('parseFrontmatter', () => {
     expect(result.body).toBe('body content');
   });
 
-  it('skips lines without colon', () => {
-    const result = parseFrontmatter('---\nname: test\nnocolon\n---\nbody');
-    expect(result.meta).toEqual({ name: 'test' });
-  });
-
-  it('skips lines with empty key', () => {
-    const result = parseFrontmatter('---\n: value\nname: test\n---\nbody');
-    expect(result.meta).toEqual({ name: 'test' });
-  });
-
   it('handles CRLF line endings', () => {
     const result = parseFrontmatter('---\r\nname: test\r\n---\r\nbody');
     expect(result.meta).toEqual({ name: 'test' });
@@ -38,5 +28,22 @@ describe('parseFrontmatter', () => {
   it('empty body after frontmatter', () => {
     const result = parseFrontmatter('---\nname: x\n---\n');
     expect(result.body).toBe('');
+  });
+
+  it('parses a block-sequence list into an array', () => {
+    const result = parseFrontmatter('---\ntools:\n  - Read\n  - Write\n---\nbody');
+    expect(result.meta).toEqual({ tools: ['Read', 'Write'] });
+    expect(result.body).toBe('body');
+  });
+
+  it('parses a quoted scalar value', () => {
+    const result = parseFrontmatter('---\ntitle: "quoted: value"\n---\nbody');
+    expect(result.meta).toEqual({ title: 'quoted: value' });
+  });
+
+  it('parses a multi-line block scalar value', () => {
+    const result = parseFrontmatter('---\ndescription: |\n  line one\n  line two\n---\nbody');
+    expect(result.meta).toEqual({ description: 'line one\nline two\n' });
+    expect(result.body).toBe('body');
   });
 });

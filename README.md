@@ -3,11 +3,11 @@
 [![CI](https://github.com/tupe12334/tools-view/actions/workflows/ci.yml/badge.svg)](https://github.com/tupe12334/tools-view/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/toolsview)](https://www.npmjs.com/package/toolsview)
 
-Visualize your Claude Code skill graph. Run it in any repo that has `.claude/skills/` and get an interactive dependency map in your browser.
+Visualize your Claude Code skill graph. Run it in any repo that has `.claude/skills/` or `.claude/agents/` and get an interactive dependency map in your browser.
 
 ## What it does
 
-Scans every `SKILL.md` in `.claude/skills/`, parses frontmatter and body text, infers relationships between skills, and opens an interactive force-directed graph (vis-network) in your browser.
+Scans every `SKILL.md` in `.claude/skills/` and every agent file in `.claude/agents/`, parses frontmatter and body text, infers relationships between skills/agents, and opens an interactive graph (cytoscape.js) in your browser.
 
 Each edge is classified by how one skill references another:
 
@@ -22,7 +22,7 @@ Hover any node to see the skill's description and allowed tools. Output files la
 
 ## Usage
 
-No install needed. Run from anywhere inside a repo that has `.claude/skills/`:
+No install needed. Run from anywhere inside a repo that has `.claude/skills/` or `.claude/agents/`:
 
 ```bash
 npx toolsview
@@ -30,12 +30,12 @@ npx toolsview
 pnpm dlx toolsview
 ```
 
-Requires Node ≥ 18. Walks up the directory tree until it finds `.claude/skills/`, builds the graph, writes `.claude/graph/graph.json` and `.claude/graph/graph.html`, then opens the HTML file in your default browser.
+Requires Node ≥ 18. Walks up the directory tree until it finds `.claude/skills/` or `.claude/agents/`, builds the graph, writes `.claude/graph/graph.json` and `.claude/graph/graph.html`, then opens the HTML file in your default browser.
 
 ## Output
 
 ```
-Skills: 7  Edges: 12
+Skills: 7  Agents: 2  Edges: 12
 Written → .claude/graph/graph.json
 Opening → .claude/graph/graph.html
 ```
@@ -58,3 +58,7 @@ and the context around the mention determines the edge type.
 ```
 
 Edge classification is based on the 120 characters before each `/skill-name` mention — words like `prerequisite`, `require`, `run before`, `calls`, `invokes`, `suggest`, `next step` steer the type.
+
+## Related projects
+
+- [moadim](https://moadim.io/) — loop engineering: build, schedule & run agent loops.
