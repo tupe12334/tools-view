@@ -20,12 +20,15 @@ export default [
       // assertions today, so the rule has zero current cost and guards against
       // the pattern creeping in as the codebase grows.
       '@typescript-eslint/no-non-null-assertion': 'error',
-      // Array methods like map/filter/reduce/every/some/sort expect their
-      // callback to return a value; forgetting the `return` silently yields
-      // `undefined` for every element, producing arrays full of holes or
-      // predicates that are always falsy. Require a return in these callbacks
-      // (and forbid one in `forEach`, where a returned value is meaningless) so
-      // these silent transform bugs surface at lint time.
+      // Require a `return` value in the callbacks of array methods that expect
+      // one (`map`, `filter`, `reduce`, `every`, `some`, `find`, `sort`,
+      // `flatMap`, …) and, with `checkForEach`, forbid returning a value from
+      // `forEach` where it is meaningless. Forgetting the `return` is a silent
+      // logic bug — the method runs but yields `undefined` per element, so a
+      // `map` produces holes, a `filter` predicate never matches, a reducer
+      // drops its accumulator. This repo builds its graph through many
+      // map/filter/reduce/sort transforms, exactly the code where the rule
+      // pays off. Codebase is clean today, so this is a zero-violation guard.
       'array-callback-return': ['error', { checkForEach: true }],
       // String concatenation with `+` silently coerces non-string operands
       // (numbers, objects) via toString and is harder to read than an
