@@ -1,38 +1,18 @@
-import { execSync } from 'child_process';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openBrowser } from './open-browser.js';
 
-vi.mock('child_process', () => ({ execSync: vi.fn() }));
+const mockOpen = vi.fn(async (_path: string) => Promise.resolve(undefined));
+vi.mock('open', () => ({ default: async (path: string): Promise<undefined> => mockOpen(path) }));
 
 describe('openBrowser', () => {
-  const mockedExecSync = vi.mocked(execSync);
-
   beforeEach(() => {
-    mockedExecSync.mockReset();
+    mockOpen.mockReset();
+    mockOpen.mockImplementation(async (_path: string) => Promise.resolve(undefined));
   });
 
-  it('uses "open" on darwin', () => {
-    const orig = process.platform;
-    Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
+  it('opens the given path', () => {
     openBrowser('/tmp/graph.html');
-    expect(mockedExecSync).toHaveBeenCalledWith('open "/tmp/graph.html"');
-    Object.defineProperty(process, 'platform', { value: orig, configurable: true });
-  });
-
-  it('uses "start" on win32', () => {
-    const orig = process.platform;
-    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
-    openBrowser('/tmp/graph.html');
-    expect(mockedExecSync).toHaveBeenCalledWith('start "" "/tmp/graph.html"');
-    Object.defineProperty(process, 'platform', { value: orig, configurable: true });
-  });
-
-  it('uses "xdg-open" on linux', () => {
-    const orig = process.platform;
-    Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
-    openBrowser('/tmp/graph.html');
-    expect(mockedExecSync).toHaveBeenCalledWith('xdg-open "/tmp/graph.html"');
-    Object.defineProperty(process, 'platform', { value: orig, configurable: true });
+    expect(mockOpen).toHaveBeenCalledWith('/tmp/graph.html');
   });
 
   it('skips when TOOLSVIEW_NO_OPEN=1', () => {
@@ -40,15 +20,13 @@ describe('openBrowser', () => {
     const { TOOLSVIEW_NO_OPEN: orig } = env;
     env.TOOLSVIEW_NO_OPEN = '1';
     openBrowser('/tmp/graph.html');
-    expect(mockedExecSync).not.toHaveBeenCalled();
+    expect(mockOpen).not.toHaveBeenCalled();
     if (orig === undefined) delete env.TOOLSVIEW_NO_OPEN;
     else env.TOOLSVIEW_NO_OPEN = orig;
   });
 
-  it('silently ignores execSync errors', () => {
-    mockedExecSync.mockImplementationOnce(() => {
-      throw new Error('no browser');
-    });
+  it('silently ignores rejection', () => {
+    mockOpen.mockRejectedValueOnce(new Error('no browser'));
     expect(() => { openBrowser('/tmp/graph.html'); }).not.toThrow();
   });
 });
