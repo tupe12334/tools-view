@@ -53,6 +53,7 @@
     "cytoscape": "^3.33.2",
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-fcose": "^2.2.0",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "open": "^11.0.1"
   }
 }
